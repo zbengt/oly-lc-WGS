@@ -1,0 +1,7 @@
+2025-11-12 14:38:19,177 [ERROR] Pipeline failed: Missing required executables: bwa, bcftools, plink. Please install them and re-run.
+Traceback (most recent call last):
+  File "/mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/code/01_align_and_visualize.py", line 614, in main
+    check_dependencies(["bwa", "samtools", "bcftools", "plink"])
+  File "/mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/code/01_align_and_visualize.py", line 166, in check_dependencies
+    raise RuntimeError(
+RuntimeError: Missing required executables: bwa, bcftools, plink. Please install them and re-run.
