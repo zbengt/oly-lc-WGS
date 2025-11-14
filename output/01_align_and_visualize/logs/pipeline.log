@@ -1,7 +1,4 @@
-2025-11-12 14:38:19,177 [ERROR] Pipeline failed: Missing required executables: bwa, bcftools, plink. Please install them and re-run.
-Traceback (most recent call last):
-  File "/mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/code/01_align_and_visualize.py", line 614, in main
-    check_dependencies(["bwa", "samtools", "bcftools", "plink"])
-  File "/mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/code/01_align_and_visualize.py", line 166, in check_dependencies
-    raise RuntimeError(
-RuntimeError: Missing required executables: bwa, bcftools, plink. Please install them and re-run.
+2025-11-14 08:17:57,457 [INFO] Discovered 112 samples across 16 locations.
+2025-11-14 08:17:57,584 [INFO] Symlinking reference genome into /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/reference
+2025-11-14 08:17:57,585 [INFO] Building BWA index for /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/reference/Olurida_v081.fa
+2025-11-14 08:17:57,586 [INFO] Running command: bwa index /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/reference/Olurida_v081.fa
