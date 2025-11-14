@@ -328,8 +328,8 @@ def collect_coverage(
     df = pd.read_csv(
         io.StringIO(result.stdout),
         sep="\t",
-        comment="#",
     )
+    df.rename(columns=lambda col: str(col).lstrip("#"), inplace=True)
     if df.empty:
         raise RuntimeError(f"No coverage data produced for {bam_path.name}.")
 

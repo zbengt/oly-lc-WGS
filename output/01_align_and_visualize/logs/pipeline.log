@@ -1,4 +1,10 @@
-2025-11-14 08:17:57,457 [INFO] Discovered 112 samples across 16 locations.
-2025-11-14 08:17:57,584 [INFO] Symlinking reference genome into /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/reference
-2025-11-14 08:17:57,585 [INFO] Building BWA index for /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/reference/Olurida_v081.fa
-2025-11-14 08:17:57,586 [INFO] Running command: bwa index /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/reference/Olurida_v081.fa
+2025-11-14 09:10:02,135 [INFO] Discovered 112 samples across 16 locations.
+2025-11-14 09:10:02,148 [INFO] Processing sample Blank_plate1 (Blank).
+2025-11-14 09:10:02,148 [INFO] Alignment already exists for Blank_plate1; skipping.
+2025-11-14 09:10:02,148 [INFO] Running command: samtools coverage -q 20 /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/alignments/Blank_plate1.sorted.bam
+2025-11-14 09:10:02,323 [INFO] Processing sample Blank_plate2 (Blank).
+2025-11-14 09:10:02,323 [INFO] Alignment already exists for Blank_plate2; skipping.
+2025-11-14 09:10:02,323 [INFO] Running command: samtools coverage -q 20 /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/alignments/Blank_plate2.sorted.bam
+2025-11-14 09:10:02,494 [INFO] Processing sample CS18_22_Wild_plate1_A7 (CS18_22_Wild_plate1).
+2025-11-14 09:10:02,495 [INFO] Running command: bash -lc set -euo pipefail
+bwa mem -t 32 /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/reference/Olurida_v081.fa /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/data/raw/CS18_22_Wild_plate1_A7_S47_L004_R1_001.fastq.gz /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/data/raw/CS18_22_Wild_plate1_A7_S47_L004_R2_001.fastq.gz | samtools sort -@ 32 -m 32M -o /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/alignments/CS18_22_Wild_plate1_A7.sorted.bam -
