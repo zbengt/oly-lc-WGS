@@ -403,7 +403,7 @@ def call_variants(
         "set -euo pipefail\n"
         f"bcftools mpileup --threads {threads} "
         f"-Ou -f {reference_fasta} "
-        f"--annotate FORMAT/AD,FORMAT/DP,INFO/DP "
+        f"--annotate FORMAT/AD,FORMAT/DP "
         f"--max-depth {max_depth} "
         f"-b {bam_list_path} "
         "| "
@@ -631,22 +631,32 @@ def main() -> None:
 
         bam_paths: List[Path] = []
         coverage_records: List[Dict[str, object]] = []
-        for sample in samples:
-            logging.info("Processing sample %s (%s).", sample.sample_id, sample.location)
-            bam_path = align_sample(
-                sample,
-                reference_fasta,
-                align_dir,
-                threads_per_sample=threads_per_sample,
-                memory_mb=args.memory_mb,
-                force=args.force,
-            )
-            bam_paths.append(bam_path)
-            coverage_metrics = collect_coverage(bam_path, min_mapq=args.min_mapq)
-            coverage_metrics.update({"sample_id": sample.sample_id, "location": sample.location})
-            coverage_records.append(coverage_metrics)
+        coverage_summary_path = metrics_dir / "coverage_summary.tsv"
+        
+        # Check if we can skip coverage calculation
+        if coverage_summary_path.exists() and not args.force:
+            logging.info("Coverage summary exists; skipping coverage calculation.")
+            # Still need to collect BAM paths for variant calling
+            for sample in samples:
+                bam_path = align_dir / f"{sample.sample_id}.sorted.bam"
+                bam_paths.append(bam_path)
+        else:
+            for sample in samples:
+                logging.info("Processing sample %s (%s).", sample.sample_id, sample.location)
+                bam_path = align_sample(
+                    sample,
+                    reference_fasta,
+                    align_dir,
+                    threads_per_sample=threads_per_sample,
+                    memory_mb=args.memory_mb,
+                    force=args.force,
+                )
+                bam_paths.append(bam_path)
+                coverage_metrics = collect_coverage(bam_path, min_mapq=args.min_mapq)
+                coverage_metrics.update({"sample_id": sample.sample_id, "location": sample.location})
+                coverage_records.append(coverage_metrics)
 
-        write_table(coverage_records, metrics_dir / "coverage_summary.tsv")
+            write_table(coverage_records, coverage_summary_path)
 
         raw_vcf, filtered_vcf = call_variants(
             bam_paths,
