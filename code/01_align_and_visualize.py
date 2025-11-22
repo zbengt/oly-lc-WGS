@@ -139,6 +139,23 @@ def parse_args() -> argparse.Namespace:
         help="Minimum QUAL score required to retain a variant site.",
     )
     parser.add_argument(
+        "--plink-min-contig-length",
+        type=int,
+        default=100000,
+        help="Minimum contig length to include in PLINK conversion (filters excessive small scaffolds).",
+    )
+    parser.add_argument(
+        "--plink-max-contigs",
+        type=int,
+        default=200,
+        help="Maximum number of contigs to include for PLINK after applying length filter (longest retained).",
+    )
+    parser.add_argument(
+        "--plink2",
+        action="store_true",
+        help="Use plink2 instead of plink (if installed) for PCA/IBS steps.",
+    )
+    parser.add_argument(
         "--skip-blanks",
         action="store_true",
         help="Exclude samples whose prefixes start with 'Blank'.",
@@ -405,6 +422,30 @@ def call_variants(
         logging.info("Variant calling outputs present; skipping mpileup/call.")
         return raw_vcf, filtered_vcf
 
+    # If raw VCF already exists (indexed or not) but filtered does not, skip mpileup and proceed
+    if raw_vcf.exists() and not filtered_vcf.exists() and not force:
+        logging.info("Raw VCF present; skipping mpileup/call and proceeding to filtering.")
+        # Ensure raw VCF is indexed before filtering
+        csi = raw_vcf.with_suffix(raw_vcf.suffix + ".csi")
+        tbi = raw_vcf.with_suffix(raw_vcf.suffix + ".tbi")
+        if not (csi.exists() or tbi.exists()):
+            run_command(["bcftools", "index", "--threads", str(threads), raw_vcf])
+        filter_cmd = [
+            "bcftools",
+            "filter",
+            "--threads",
+            str(threads),
+            "-i",
+            f"QUAL>{min_qual} && INFO/DP>{min_total_depth}",
+            "-Oz",
+            "-o",
+            str(filtered_vcf),
+            str(raw_vcf),
+        ]
+        run_command(filter_cmd)
+        run_command(["bcftools", "index", "--threads", str(threads), filtered_vcf])
+        return raw_vcf, filtered_vcf
+
     mpileup_cmd = (
         "set -euo pipefail\n"
         f"bcftools mpileup --threads {threads} "
@@ -440,6 +481,9 @@ def run_plink_pca(
     variant_dir: Path,
     threads: int,
     force: bool,
+    plink_min_contig_length: int,
+    plink_max_contigs: int,
+    use_plink2: bool,
 ) -> Tuple[Path, Path]:
     """Convert VCF to PLINK format and compute PCA + IBS matrices."""
     prefix = variant_dir / "plink_dataset"
@@ -448,17 +492,84 @@ def run_plink_pca(
 
     bed_file = prefix.with_suffix(".bed")
     eigenvec = pca_prefix.with_suffix(".eigenvec")
-    ibs_matrix = ibs_prefix.with_suffix(".mdist")
+    ibs_matrix = ibs_prefix.with_suffix(".mibs")
 
     if not (bed_file.exists() and eigenvec.exists() and ibs_matrix.exists()) or force:
+        # Subset VCF to long contigs to satisfy PLINK limits on distinct chromosome names.
+        subset_vcf = variant_dir / "subset_for_plink.vcf.gz"
+        subset_index_csi = subset_vcf.with_suffix(".csi")
+        if not subset_vcf.exists() or force:
+            logging.info(
+                "Creating PLINK subset VCF retaining contigs length >= %d", plink_min_contig_length
+            )
+            # Extract contig lengths from header, select those meeting threshold.
+            header_proc = run_command([
+                "bcftools",
+                "view",
+                "-h",
+                str(filtered_vcf),
+            ], capture_output=True, text=True)
+            contigs_with_len: list[tuple[str,int]] = []
+            for line in header_proc.stdout.splitlines():
+                if line.startswith("##contig="):
+                    # Format: ##contig=<ID=Contig0,length=116746>
+                    try:
+                        inside = line.split("<", 1)[1].rsplit(">", 1)[0]
+                        parts = dict(
+                            kv.split("=") for kv in inside.split(",") if "=" in kv
+                        )
+                        cid = parts.get("ID")
+                        length_val = int(parts.get("length", "0"))
+                        if cid and length_val >= plink_min_contig_length:
+                            contigs_with_len.append((cid,length_val))
+                    except Exception:
+                        continue
+            if not contigs_with_len:
+                raise RuntimeError(
+                    "No contigs meet length threshold for PLINK conversion; reduce --plink-min-contig-length."
+                )
+            # Sort by length desc and retain top N
+            contigs_with_len.sort(key=lambda x: x[1], reverse=True)
+            selected = [cid for cid,_ in contigs_with_len[:plink_max_contigs]]
+            logging.info(
+                "Selected %d contigs (threshold=%d, max=%d). Shortest retained length=%d.",
+                len(selected),
+                plink_min_contig_length,
+                plink_max_contigs,
+                contigs_with_len[min(len(contigs_with_len), plink_max_contigs)-1][1],
+            )
+            regions_file = variant_dir / "plink_contigs.txt"
+            regions_file.write_text("\n".join(selected) + "\n")
+            view_cmd = [
+                "bcftools",
+                "view",
+                "-Oz",
+                "-o",
+                str(subset_vcf),
+                "-r",
+                ",".join(selected),
+                str(filtered_vcf),
+            ]
+            run_command(view_cmd)
+            run_command([
+                "bcftools",
+                "index",
+                "--threads",
+                str(threads),
+                str(subset_vcf),
+            ])
+        plink_input_vcf = subset_vcf if subset_vcf.exists() else filtered_vcf
+        plink_bin = "plink2" if use_plink2 and shutil.which("plink2") else "plink"
+        if use_plink2 and plink_bin != "plink2":
+            logging.warning("--plink2 requested but 'plink2' not found; falling back to 'plink'.")
         convert_cmd = [
-            "plink",
+            plink_bin,
             "--vcf",
-            str(filtered_vcf),
+            str(plink_input_vcf),
             "--allow-extra-chr",
             "--double-id",
             "--set-missing-var-ids",
-            "@:#",
+            "@:#:\\$1:\\$2",
             "--make-bed",
             "--out",
             str(prefix),
@@ -466,9 +577,14 @@ def run_plink_pca(
         run_command(convert_cmd, cwd=variant_dir)
 
         pca_cmd = [
-            "plink",
+            plink_bin,
             "--bfile",
             str(prefix),
+            "--allow-extra-chr",
+            "--geno",
+            "0.5",
+            "--mind",
+            "0.9",
             "--pca",
             "10",
             "header",
@@ -480,9 +596,14 @@ def run_plink_pca(
         run_command(pca_cmd, cwd=variant_dir)
 
         ibs_cmd = [
-            "plink",
+            plink_bin,
             "--bfile",
             str(prefix),
+            "--allow-extra-chr",
+            "--geno",
+            "0.5",
+            "--mind",
+            "0.9",
             "--distance",
             "square",
             "ibs",
@@ -517,7 +638,7 @@ def generate_visualization(
         raise RuntimeError("PCA results missing PC1/PC2 columns.")
 
     ibs_ids = []
-    with (ibs_matrix_path.with_suffix(".mdist.id")).open() as handle:
+    with (ibs_matrix_path.with_suffix(".mibs.id")).open() as handle:
         for line in handle:
             parts = line.strip().split()
             if parts:
@@ -680,6 +801,9 @@ def main() -> None:
             variant_dir,
             threads=total_threads,
             force=args.force,
+            plink_min_contig_length=args.plink_min_contig_length,
+            plink_max_contigs=args.plink_max_contigs,
+            use_plink2=args.plink2,
         )
 
         figure_path = generate_visualization(

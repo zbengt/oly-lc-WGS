@@ -1,15 +1,5 @@
-2025-11-17 09:30:56,093 [INFO] Discovered 112 samples across 16 locations.
-2025-11-17 09:30:56,207 [INFO] Coverage summary exists; skipping coverage calculation.
-2025-11-17 09:30:56,213 [INFO] Running command: bash -lc set -euo pipefail
-bcftools mpileup --threads 32 -Ou -f /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/reference/Olurida_v081.fa --annotate FORMAT/AD,FORMAT/DP --max-depth 200 -b /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/variants/bam_list.txt | bcftools call --threads 32 -mv -Oz -o /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/variants/all_samples.raw.vcf.gz
-2025-11-21 14:43:57,163 [ERROR] Pipeline failed: sequence item 4: expected str instance, PosixPath found
-Traceback (most recent call last):
-  File "/mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/code/01_align_and_visualize.py", line 661, in main
-    raw_vcf, filtered_vcf = call_variants(
-                            ^^^^^^^^^^^^^^
-  File "/mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/code/01_align_and_visualize.py", line 413, in call_variants
-    run_command(["bcftools", "index", "--threads", str(threads), raw_vcf])
-  File "/mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/code/01_align_and_visualize.py", line 269, in run_command
-    log_cmd = " ".join(command)
-              ^^^^^^^^^^^^^^^^^
-TypeError: sequence item 4: expected str instance, PosixPath found
+2025-11-22 11:22:03,690 [INFO] Discovered 112 samples across 16 locations.
+2025-11-22 11:22:03,706 [INFO] Coverage summary exists; skipping coverage calculation.
+2025-11-22 11:22:03,712 [INFO] Variant calling outputs present; skipping mpileup/call.
+2025-11-22 11:22:05,957 [INFO] generated new fontManager
+2025-11-22 11:22:11,202 [INFO] Pipeline complete. Outputs written to /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize
