@@ -255,24 +255,30 @@ def discover_samples(raw_dir: Path, skip_blanks: bool) -> List[Sample]:
 
 
 def run_command(
-    command: Iterable[str] | str,
+    command: Iterable[str | Path] | str,
     *,
     cwd: Optional[Path] = None,
     env: Optional[Dict[str, str]] = None,
     capture_output: bool = False,
     text: bool = True,
 ) -> subprocess.CompletedProcess:
-    """Wrapper around subprocess.run with logging and error handling."""
+    """Wrapper around subprocess.run with logging and error handling.
+
+    Accepts Path objects in the command iterable and coerces them to strings.
+    """
     if isinstance(command, str):
         log_cmd = command
+        cmd_list: list[str] = [command]
     else:
-        log_cmd = " ".join(command)
+        # Coerce all parts to str to avoid TypeErrors when joining/logging
+        cmd_list = [str(part) for part in command]
+        log_cmd = " ".join(cmd_list)
     logging.info("Running command: %s", log_cmd)
     merged_env = os.environ.copy()
     if env:
         merged_env.update({k: str(v) for k, v in env.items()})
     result = subprocess.run(
-        command,
+        cmd_list if not isinstance(command, str) else command,
         cwd=str(cwd) if cwd else None,
         env=merged_env,
         check=True,

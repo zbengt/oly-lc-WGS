@@ -1,0 +1,5 @@
+2025-11-17 09:41:12,539 [ERROR] Variant summary pipeline failed: Required input not found: /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/variants/all_samples.filtered.vcf.gz
+Traceback (most recent call last):
+  File "/mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/code/02_variant_summary.py", line 411, in main
+    raise FileNotFoundError(f"Required input not found: {path}")
+FileNotFoundError: Required input not found: /mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/output/01_align_and_visualize/variants/all_samples.filtered.vcf.gz
