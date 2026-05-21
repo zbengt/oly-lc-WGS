@@ -91,12 +91,12 @@ and `output/02_bam_summary/tables/`.
 
 | Summary | Current value |
 | --- | --- |
-| Mean genome coverage across non-blank samples | 0.480 |
-| Mean depth across non-blank samples | 5.44× |
+| Mean genome coverage across non-blank samples | 0.480 covered fraction (48.0%) |
+| Mean genome-wide depth across non-blank samples | 5.44× |
 | Mean location-level BAM heterozygosity | 0.00824 |
 | Mean location-level BAM mismatch rate | 0.00530 |
 | Highest location-level heterozygosity | `FB18_Wild` (0.01457) |
-| Highest location-level mean sampled depth | `Ostrich_Bay` (14.91) |
+| Highest location-level mean depth at sampled BAM sites | `Ostrich_Bay` (14.91) |
 | Highest location-level mismatch rate | `HC18_Triton_Wild` (0.00979) |
 | Highest per-sample heterozygosity in BAM summary | `FB18_Wild_11` (0.02283) |
 
