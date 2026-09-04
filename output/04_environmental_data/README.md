@@ -30,12 +30,14 @@ re-checked once the original collection records are available.
   stations; not every station reports water temperature.
 - **NOAA CO-OPS Tides & Currents** — station metadata API and data getter
   (<https://api.tidesandcurrents.noaa.gov/>), used for hourly water temperature.
-- **NANOOS / UW ORCA moored buoys** — Twanoh, Hoodsport, Dabob Bay, North Buoy,
+- **NANOOS / UW ORCA moored buoys** — Twanoh, Hoodsport, Dabob Bay, Hansville,
   Point Wells, Carr Inlet. These are the closest oceanographic moorings to most
-  Puget Sound sites and carry CTD, oxygen, chlorophyll, and met sensors, but
-  their data are distributed through NANOOS (<https://nvs.nanoos.org/>) rather
-  than a public bulk endpoint. They are listed in `nearby-stations.tsv` as
-  pointers and are **not** downloaded by this step.
+  Puget Sound sites and carry CTD, oxygen, chlorophyll, nitrate, and met
+  sensors. They are listed in `nearby-stations.tsv` as pointers and are **not**
+  downloaded by this step, but their data *are* openly available from the NANOOS
+  ERDDAP server (<https://data.nanoos.org/erddap/>, profiles back to 2005) — see
+  [`docs/environmental-data-access-plan.md`](../../docs/environmental-data-access-plan.md)
+  for the access details and the plan to ingest them.
 
 ## Current snapshot
 
@@ -70,8 +72,9 @@ in-water NOAA sensor of their own, so the nearest reporting station is a basin
 away (Tacoma serves the South Sound sites, Port Townsend the north Sound and
 Hood Canal sites). Treat these as basin-scale context, not site conditions — the
 ORCA moorings above are far closer for Hood Canal and South Sound, and
-Washington Department of Ecology's marine monitoring stations are the other
-option for inlet-scale data.
+Washington Department of Ecology's monthly CTD stations are within 4-21 km of
+every Puget Sound site here. Both are openly accessible; see
+[`docs/environmental-data-access-plan.md`](../../docs/environmental-data-access-plan.md).
 
 ## Reproducing
 

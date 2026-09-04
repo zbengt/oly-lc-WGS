@@ -119,9 +119,12 @@ station crosswalk, are in
 No NOAA in-water sensor sits inside the small inlets these oysters come from, so
 the closest reporting station is typically a basin away (Tacoma for the South
 Sound sites, Port Townsend for the north Sound and Hood Canal sites). The
-NANOOS/UW ORCA moorings are much closer for Hood Canal and South Sound and are
-listed in the station crosswalk, but their data are not downloadable from a
-public bulk endpoint and so are recorded as pointers only.
+NANOOS/UW ORCA moorings and Washington Dept. of Ecology's monthly CTD stations
+are much closer — Ecology has a station within 4-21 km of every Puget Sound site
+here — and both are openly accessible. Step 04 records them as pointers only;
+[`docs/environmental-data-access-plan.md`](docs/environmental-data-access-plan.md)
+documents the verified access paths, an inquiry to send to NANOOS/UW-APL, and
+the plan for ingesting both sources.
 
 ### Generated figures
 

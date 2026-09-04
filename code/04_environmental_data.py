@@ -112,14 +112,16 @@ SITES = {
 }
 
 # Curated reference list of NANOOS/UW ORCA moored buoys. These are the closest
-# real-time oceanographic moorings to most Puget Sound sites, but their data are
-# distributed through NANOOS (nvs.nanoos.org) rather than a public bulk endpoint,
-# so they are recorded here as pointers rather than downloaded.
+# real-time oceanographic moorings to most Puget Sound sites. Their profile data
+# are openly served from the NANOOS ERDDAP (data.nanoos.org/erddap, griddap
+# datasets orca_hydro_*); ingesting them is planned as a separate step, so they
+# are recorded here as pointers rather than downloaded.
+# See docs/environmental-data-access-plan.md.
 ORCA_BUOYS = [
     ("ORCA_Twanoh", "Twanoh, southern Hood Canal", 47.375, -123.008),
     ("ORCA_Hoodsport", "Hoodsport, Hood Canal", 47.425, -123.113),
     ("ORCA_DabobBay", "Dabob Bay, Hood Canal", 47.803, -122.803),
-    ("ORCA_NorthBuoy", "North Buoy, Hood Canal", 47.900, -122.622),
+    ("ORCA_Hansville", "Hansville, northern Puget Sound", 47.907, -122.627),
     ("ORCA_PointWells", "Point Wells, central Puget Sound", 47.761, -122.397),
     ("ORCA_CarrInlet", "Carr Inlet, southern Puget Sound", 47.280, -122.730),
 ]
