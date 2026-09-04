@@ -65,3 +65,26 @@ VCF/PLINK-based variant quality assessment (requires joint VCF from step 01).
 - **Notes**
   - Generates a PLINK `--within` cluster file based on sample locations to stratify allele frequencies.
   - Respects thread limits (≤50) and reuses existing outputs unless `--force` is provided.
+
+## 04_environmental_data.py
+
+Environmental context for each putative sampling site from nearby buoys and shore stations.
+
+- **Inputs**
+  - Sample metadata table (`output/01_align_and_visualize/metrics/sample_metadata.tsv`)
+  - Site coordinates for the putative locations documented in the top-level `README.md` (defined in the script)
+  - Live NOAA endpoints: NDBC station table and `realtime2` feed; CO-OPS metadata and data APIs
+- **Execution**
+  - Run from the repository root:  
+    `python code/04_environmental_data.py --days 30 --radius-km 75`
+  - `--no-download` builds only the site/station crosswalk
+- **Outputs**
+  - `output/04_environmental_data/site-coordinates.tsv` putative site, region, coordinates, confidence, sample count
+  - `output/04_environmental_data/stations/` full station catalog and per-site nearby-station matches
+  - `output/04_environmental_data/observations/` CO-OPS hourly water temperature and NDBC standard-met records
+  - `output/04_environmental_data/environmental-summary.tsv` per-site, per-variable n/mean/min/max
+  - `output/04_environmental_data/metadata.json` parameters, sources, runtime, software versions
+- **Notes**
+  - Site coordinates are approximate centroids for interpreted sites, not recorded collection points; ambiguous locations (`CS18_22_Wild_plate1`, `LS`, `MB`, `WB`) are flagged `uncertain`.
+  - A station may advertise water temperature but return nothing for the window, so the script walks outwards until one delivers data.
+  - NANOOS/UW ORCA moorings are listed as pointers only; their data are not available from a public bulk endpoint.

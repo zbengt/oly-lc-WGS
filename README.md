@@ -24,6 +24,7 @@ Additional details for each analysis step are documented in
 | 1 | `code/01_align_and_visualize.py` | Align paired-end FASTQs to the Olympia oyster reference, build a joint VCF/PLINK dataset, and visualize genetic connectedness | `output/01_align_and_visualize/alignments/`, `variants/`, `metrics/`, `figures/genetic_connectedness.png` |
 | 2 | `code/02_bam_summary.py` | Summarize mismatch, heterozygosity, IBS, and PCA directly from BAMs without rerunning variant calling | `output/02_bam_summary/tables/`, `figures/bam_connectedness.png` |
 | 3 | `code/03_variant_summary.py` | Generate VCF/PLINK-based variant quality and diversity summaries | `output/03_variant_summary/` |
+| 4 | `code/04_environmental_data.py` | Match each putative sampling site to nearby NOAA buoys/stations and download recent observations | `output/04_environmental_data/` |
 
 ## Requirements
 
@@ -35,6 +36,7 @@ Run commands from the repository root and keep `data/` read-only.
   - step 01: `bwa`, `samtools`, `bcftools`, `plink`
   - step 02: `samtools`
   - step 03: `bcftools`, `plink`
+  - step 04: network access to NOAA NDBC and NOAA CO-OPS endpoints
 
 ## Typical usage
 
@@ -42,6 +44,7 @@ Run commands from the repository root and keep `data/` read-only.
 python code/01_align_and_visualize.py --threads 32 --threads-per-sample 4
 python code/02_bam_summary.py --num-sites 500
 python code/03_variant_summary.py --threads 32
+python code/04_environmental_data.py --days 30 --radius-km 75
 ```
 
 All outputs are written with relative paths so results remain reproducible across
@@ -104,6 +107,21 @@ and `output/02_bam_summary/tables/`.
 | Highest location-level mean depth at sampled BAM sites | `Ostrich_Bay` (14.91) |
 | Highest location-level mismatch rate | `HC18_Triton_Wild` (0.00979) |
 | Highest per-sample heterozygosity in BAM summary | `FB18_Wild_11` (0.02283) |
+
+### Environmental context
+
+`code/04_environmental_data.py` pairs each putative site with the buoys and
+shore stations around it and pulls recent observations from NOAA NDBC and NOAA
+CO-OPS. Results, including per-site water-temperature summaries and the full
+station crosswalk, are in
+[`output/04_environmental_data/`](output/04_environmental_data/README.md).
+
+No NOAA in-water sensor sits inside the small inlets these oysters come from, so
+the closest reporting station is typically a basin away (Tacoma for the South
+Sound sites, Port Townsend for the north Sound and Hood Canal sites). The
+NANOOS/UW ORCA moorings are much closer for Hood Canal and South Sound and are
+listed in the station crosswalk, but their data are not downloadable from a
+public bulk endpoint and so are recorded as pointers only.
 
 ### Generated figures
 
