@@ -65,24 +65,29 @@ BAM-summary stages.
 
 ### Sample counts by inferred location
 
-| Location | Samples |
-| --- | ---: |
-| Blank | 2 |
-| CS18_22_Wild_plate1 | 7 |
-| Coos_Bay | 7 |
-| Dogfish_Bay | 8 |
-| FB18_Wild | 5 |
-| Fidalgo_Bay | 5 |
-| HC18_Triton_Wild | 8 |
-| LS | 7 |
-| MB | 8 |
-| NS18_Disco_Wild | 8 |
-| NS18_Sequim_Wild | 8 |
-| Ostrich_Bay | 8 |
-| PGB18_Wild | 8 |
-| SS18_North_Bay_Wild | 8 |
-| Squaxin_Island | 7 |
-| WB | 8 |
+| Location | Putative site (complete words) | Samples |
+| --- | --- | ---: |
+| Blank | Negative control (no oyster tissue) | 2 |
+| CS18_22_Wild_plate1 | Central Sound wild collection, 2018 (Clam Bay / Manchester vicinity) — uncertain | 7 |
+| Coos_Bay | Coos Bay, Oregon (outside Puget Sound) | 7 |
+| Dogfish_Bay | Dogfish Bay, Liberty Bay vicinity, Kitsap Peninsula, Puget Sound | 8 |
+| FB18_Wild | Fidalgo Bay wild collection, 2018, Anacortes, northern Puget Sound | 5 |
+| Fidalgo_Bay | Fidalgo Bay, Anacortes, northern Puget Sound | 5 |
+| HC18_Triton_Wild | Triton Cove, Hood Canal, 2018 wild collection | 8 |
+| LS | Little Skookum Inlet, southern Puget Sound — uncertain | 7 |
+| MB | Mud Bay, Eld Inlet, southern Puget Sound — uncertain | 8 |
+| NS18_Disco_Wild | Discovery Bay, north Olympic Peninsula, 2018 wild collection | 8 |
+| NS18_Sequim_Wild | Sequim Bay, north Olympic Peninsula, 2018 wild collection | 8 |
+| Ostrich_Bay | Ostrich Bay, Dyes Inlet, Bremerton, central Puget Sound | 8 |
+| PGB18_Wild | Port Gamble Bay, 2018 wild collection, northern Hood Canal | 8 |
+| SS18_North_Bay_Wild | North Bay, Case Inlet, southern Puget Sound, 2018 wild collection | 8 |
+| Squaxin_Island | Squaxin Island, southern Puget Sound | 7 |
+| WB | Westcott Bay, San Juan Island — uncertain | 8 |
+
+Site names in the second column are inferred from the sample-name prefixes, not
+from a curated collection sheet. Rows flagged *uncertain* have prefixes that do
+not map unambiguously to a single site and should be confirmed against the
+original collection records before use.
 
 ### Summary metrics from committed outputs
 
