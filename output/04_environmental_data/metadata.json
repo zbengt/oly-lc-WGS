@@ -1,0 +1,33 @@
+{
+  "script": "04_environmental_data.py",
+  "input": "output/01_align_and_visualize/metrics/sample_metadata.tsv",
+  "parameters": {
+    "days": 30,
+    "radius_km": 75.0,
+    "top_n": 5,
+    "no_download": false,
+    "observation_window_utc": [
+      "2026-08-05T20:44:01.302407+00:00",
+      "2026-09-04T20:44:01.302407+00:00"
+    ]
+  },
+  "sources": {
+    "ndbc_station_table": "https://www.ndbc.noaa.gov/data/stations/station_table.txt",
+    "ndbc_realtime2": "https://www.ndbc.noaa.gov/data/realtime2/{station}.txt",
+    "coops_metadata_api": "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations.json?type={kind}",
+    "coops_data_api": "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter",
+    "nanoos_orca": "https://nvs.nanoos.org/"
+  },
+  "counts": {
+    "sites": 15,
+    "station_matches": 200,
+    "observation_series": 43
+  },
+  "date": "2026-09-04T20:45:26.892643+00:00",
+  "runtime_seconds": 87.4,
+  "software": {
+    "python": "3.9.6",
+    "pandas": "2.3.1"
+  },
+  "notes": "Site coordinates are approximate centroids for the putative sites named in README.md, not recorded collection points. Sites marked 'uncertain' have ambiguous name prefixes and their station matches should be re-checked once the original collection records are available."
+}
