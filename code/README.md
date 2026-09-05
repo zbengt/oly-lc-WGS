@@ -23,6 +23,12 @@ Low-coverage WGS alignment and genetic connectedness summary pipeline.
 - **Notes**
   - Sample locations are inferred from FASTQ prefixes and propagated into all summaries.
   - Blank/control samples can be skipped with `--skip-blanks`.
+  - Each BAM carries an `@RG` line with `SM:<sample_id>`, so bcftools and PLINK name
+    samples by ID. BAMs aligned before this was added lack the tag and are named by
+    file path in the VCF; the script warns about them and maps the names back for
+    plotting, but re-align with `--force` (or `samtools addreplacerg`) to fix the VCF.
+  - The IBS heatmap plots PLINK's `.mibs` values directly (proportion of alleles
+    shared); an earlier version inverted them.
   - All outputs use relative paths to maintain reproducibility.
 
 ## 02_bam_summary.py
