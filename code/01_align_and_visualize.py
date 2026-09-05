@@ -33,6 +33,8 @@ Usage
 All paths are relative to the repository root; do not modify files in `data/`.
 """
 
+from __future__ import annotations
+
 import argparse
 import io
 import json
@@ -305,6 +307,23 @@ def run_command(
     return result
 
 
+def bam_has_read_group(bam_path: Path, sample_id: str) -> bool:
+    """Return True if the BAM header carries an @RG line with SM:<sample_id>."""
+    try:
+        result = subprocess.run(
+            ["samtools", "view", "-H", str(bam_path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError:
+        return False
+    for line in result.stdout.splitlines():
+        if line.startswith("@RG") and f"\tSM:{sample_id}" in line:
+            return True
+    return False
+
+
 def align_sample(
     sample: Sample,
     reference_fasta: Path,
@@ -318,13 +337,24 @@ def align_sample(
     bam_path = align_dir / f"{sample.sample_id}.sorted.bam"
     if bam_path.exists() and not force:
         logging.info("Alignment already exists for %s; skipping.", sample.sample_id)
+        if not bam_has_read_group(bam_path, sample.sample_id):
+            logging.warning(
+                "%s has no @RG line with SM:%s; bcftools will name this sample by its "
+                "file path. Re-run with --force or add one with `samtools addreplacerg`.",
+                bam_path.name,
+                sample.sample_id,
+            )
         return bam_path
 
     threads = max(1, threads_per_sample)
     per_thread_mem = max(32, memory_mb // max(1, threads))
+    # Tag reads with a read group so downstream tools (bcftools, PLINK) name the
+    # sample by its ID rather than by the BAM file path. bwa expands the literal
+    # "\t"; the single quotes keep bash from touching it.
+    read_group = f"@RG\\tID:{sample.sample_id}\\tSM:{sample.sample_id}\\tPL:ILLUMINA"
     pipeline = (
         "set -euo pipefail\n"
-        f"bwa mem -t {threads} {reference_fasta} {sample.r1} {sample.r2} | "
+        f"bwa mem -t {threads} -R '{read_group}' {reference_fasta} {sample.r1} {sample.r2} | "
         f"samtools sort -@ {threads} -m {per_thread_mem}M -o {bam_path} -"
     )
     run_command(["bash", "-lc", pipeline], env={"OMP_NUM_THREADS": str(threads)})
@@ -627,13 +657,32 @@ def generate_visualization(
     figure_dir.mkdir(parents=True, exist_ok=True)
     sample_lookup = {sample.sample_id: sample.location for sample in samples}
 
+    def normalize_sample_id(raw_id: str) -> str:
+        """Map a VCF/PLINK sample name back to the sample ID.
+
+        BAMs aligned without a read group are named by bcftools after their file
+        path (e.g. ``.../CS18_22_Wild_plate1_A7.sorted.bam``); strip that back to
+        the bare sample ID so location lookups and axis labels still work.
+        """
+        name = Path(str(raw_id)).name
+        for suffix in (".sorted.bam", ".bam"):
+            if name.endswith(suffix):
+                name = name[: -len(suffix)]
+        return name
+
     eigenvec = pd.read_csv(
         eigenvec_path,
-        delim_whitespace=True,
+        sep=r"\s+",
         header=0,
     )
     eigenvec.rename(columns={"#FID": "fid", "FID": "fid", "IID": "iid"}, inplace=True)
+    eigenvec["iid"] = eigenvec["iid"].map(normalize_sample_id)
     eigenvec["location"] = eigenvec["iid"].map(lambda sid: sample_lookup.get(sid, "unknown"))
+    unknown = int((eigenvec["location"] == "unknown").sum())
+    if unknown:
+        logging.warning(
+            "%d of %d PCA samples could not be matched to a location.", unknown, len(eigenvec)
+        )
     if "PC1" not in eigenvec.columns or "PC2" not in eigenvec.columns:
         raise RuntimeError("PCA results missing PC1/PC2 columns.")
 
@@ -642,24 +691,25 @@ def generate_visualization(
         for line in handle:
             parts = line.strip().split()
             if parts:
-                ibs_ids.append(parts[-1])
+                ibs_ids.append(normalize_sample_id(parts[-1]))
     ibs_matrix = np.atleast_2d(np.loadtxt(ibs_matrix_path))
     if ibs_matrix.shape[0] != len(ibs_ids):
         raise RuntimeError("Mismatch between IBS matrix and ID file.")
-    # Convert IBS distance to similarity score (1 - distance).
-    ibs_similarity = 1.0 - ibs_matrix
+    # PLINK `--distance square ibs` writes a .mibs file that already holds IBS
+    # *similarity* (proportion of alleles shared, 1.0 on the diagonal), so it is
+    # used as-is. Subtracting from 1 would turn it into a distance.
+    ibs_similarity = ibs_matrix
 
     locations = sorted({sample.location for sample in samples})
 
     try:
-        import matplotlib.cm as cm
         import matplotlib.pyplot as plt
     except ImportError as err:
         raise ImportError("matplotlib is required for visualization.") from err
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
-    cmap = cm.get_cmap("tab20", len(locations))
+    cmap = plt.get_cmap("tab20", len(locations))
     color_assignments = {loc: cmap(i) for i, loc in enumerate(locations)}
 
     axes[0].set_title("Genomic PCA (PC1 vs PC2)")
@@ -682,7 +732,7 @@ def generate_visualization(
     axes[1].set_yticks(range(len(ibs_ids)))
     axes[1].set_xticklabels(ibs_ids, rotation=90, fontsize=6)
     axes[1].set_yticklabels(ibs_ids, fontsize=6)
-    fig.colorbar(im, ax=axes[1], fraction=0.046, pad=0.04, label="IBS similarity (1 - distance)")
+    fig.colorbar(im, ax=axes[1], fraction=0.046, pad=0.04, label="IBS similarity (proportion of alleles shared)")
     fig.tight_layout()
 
     figure_path = figure_dir / "genetic_connectedness.png"

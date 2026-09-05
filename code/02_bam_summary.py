@@ -18,6 +18,8 @@ available compute resources (≤50 CPUs, ≈200 MB RAM) by streaming over BAM 
 sequentially and sampling a modest number of genomic sites.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import logging
@@ -516,12 +518,11 @@ def plot_results(
     figure_dir.mkdir(parents=True, exist_ok=True)
     try:
         import matplotlib.pyplot as plt
-        import matplotlib.cm as cm
     except ImportError as err:  # pragma: no cover - runtime dependency
         raise ImportError("matplotlib is required for plotting.") from err
 
     unique_locations = sorted(set(locations))
-    cmap = cm.get_cmap("tab20", len(unique_locations))
+    cmap = plt.get_cmap("tab20", len(unique_locations))
     location_colors = {loc: cmap(i) for i, loc in enumerate(unique_locations)}
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
