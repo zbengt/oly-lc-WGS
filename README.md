@@ -9,7 +9,7 @@ step-matched subdirectories under `output/`.
 
 | Path | Contents |
 | --- | --- |
-| `code/` | Analysis scripts run in numeric order (`01_` → `03_`) |
+| `code/` | Analysis scripts run in numeric order (`01_` → `04_`) |
 | `data/` | Raw reads and reference assets used as read-only inputs |
 | `output/` | Generated alignments, tables, figures, logs, and metadata |
 | `INSTRUCTIONS.md` | Project execution conventions for agents and contributors |
