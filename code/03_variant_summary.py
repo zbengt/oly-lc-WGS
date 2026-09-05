@@ -21,6 +21,8 @@ and metadata are saved under `output/03_variant_summary/` in accordance with the
 conventions in `INSTRUCTIONS.md`.
 """
 
+from __future__ import annotations
+
 import argparse
 import json
 import logging
@@ -257,12 +259,12 @@ def summarise_heterozygosity(
     metadata: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Compute heterozygosity rates per sample and per location."""
-    het_df = pd.read_csv(heter_path, delim_whitespace=True)
+    het_df = pd.read_csv(heter_path, sep=r"\s+")
     het_df.rename(columns={"IID": "sample_id"}, inplace=True)
     het_df = het_df.merge(metadata, on="sample_id", how="left")
     het_df["heterozygosity_rate"] = 1.0 - (het_df["O(HOM)"] / het_df["N(NM)"])
     het_df.replace([np.inf, -np.inf], np.nan, inplace=True)
-    het_df["heterozygosity_rate"].fillna(0.0, inplace=True)
+    het_df["heterozygosity_rate"] = het_df["heterozygosity_rate"].fillna(0.0)
 
     loc_df = (
         het_df.groupby("location")
@@ -273,7 +275,7 @@ def summarise_heterozygosity(
         )
         .reset_index()
     )
-    loc_df["std_heterozygosity"].fillna(0.0, inplace=True)
+    loc_df["std_heterozygosity"] = loc_df["std_heterozygosity"].fillna(0.0)
     return het_df, loc_df
 
 
@@ -282,7 +284,7 @@ def summarise_missingness(
     metadata: pd.DataFrame,
 ) -> Tuple[pd.DataFrame, pd.DataFrame]:
     """Compute missingness per sample and per location."""
-    miss_df = pd.read_csv(missing_path, delim_whitespace=True)
+    miss_df = pd.read_csv(missing_path, sep=r"\s+")
     miss_df.rename(columns={"IID": "sample_id"}, inplace=True)
     miss_df = miss_df.merge(metadata, on="sample_id", how="left")
     miss_df["call_rate"] = 1.0 - miss_df["F_MISS"]
@@ -296,13 +298,13 @@ def summarise_missingness(
         )
         .reset_index()
     )
-    loc_df["std_call_rate"].fillna(0.0, inplace=True)
+    loc_df["std_call_rate"] = loc_df["std_call_rate"].fillna(0.0)
     return miss_df, loc_df
 
 
 def summarise_frequency(freq_path: Path) -> pd.DataFrame:
     """Aggregate stratified allele frequencies to per-location summaries."""
-    freq_df = pd.read_csv(freq_path, delim_whitespace=True)
+    freq_df = pd.read_csv(freq_path, sep=r"\s+")
     required_cols = {"CLST", "MAF", "NCHROBS"}
     missing = required_cols - set(freq_df.columns)
     if missing:
@@ -320,7 +322,7 @@ def summarise_frequency(freq_path: Path) -> pd.DataFrame:
         )
         .reset_index()
     )
-    summary["sd_maf"].fillna(0.0, inplace=True)
+    summary["sd_maf"] = summary["sd_maf"].fillna(0.0)
     return summary
 
 

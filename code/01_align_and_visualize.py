@@ -703,14 +703,13 @@ def generate_visualization(
     locations = sorted({sample.location for sample in samples})
 
     try:
-        import matplotlib.cm as cm
         import matplotlib.pyplot as plt
     except ImportError as err:
         raise ImportError("matplotlib is required for visualization.") from err
 
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
 
-    cmap = cm.get_cmap("tab20", len(locations))
+    cmap = plt.get_cmap("tab20", len(locations))
     color_assignments = {loc: cmap(i) for i, loc in enumerate(locations)}
 
     axes[0].set_title("Genomic PCA (PC1 vs PC2)")
