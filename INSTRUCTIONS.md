@@ -1,177 +1,107 @@
-# 🧠 AGENT INSTRUCTIONS
+# Project conventions
 
-These instructions define how an automated agent (e.g., ChatGPT, Claude) should work within this repository.
+How the scripts in this repository are organized, run, and extended. Written
+for contributors and for automated agents (Copilot, Claude, and similar) working
+in the repo. For the scientific context see `README.md`; for per-step inputs,
+outputs, and flags see `code/README.md`.
 
----
-
-## 📁 Repository Structure
-
-```
-repo/
-├── code/      → all analysis or processing scripts
-├── data/      → raw and reference input data (read-only)
-└── output/    → generated results organized by script
-```
-
-**Key convention:**  
-Each file in `code/` is prefixed with a sequential number (e.g., `01_`, `02_`, `03_`), indicating **execution order**.  
-Each script writes outputs into a **matching subdirectory** inside `output/`.
-
-| Code File | Output Directory | Purpose |
-|------------|------------------|----------|
-| `code/01_load_data.py` | `output/01_load_data/` | Load and clean input data |
-| `code/02_preprocess.R` | `output/02_preprocess/` | Transform and filter data |
-| `code/03_analyze.ipynb` | `output/03_analyze/` | Model and visualize results |
-
----
-
-## ⚙️ Execution Rules
-
-1. **Run code files in ascending numeric order.**  
-   Example: run `01_` before `02_`, `02_` before `03_`.
-
-2. **Each step depends on the previous one.**  
-   Inputs for `02_` come from `output/01_*/`, etc.
-
-3. **Each script writes results to a matching output subdirectory.**  
-   Example:  
-   ```python
-   os.makedirs("output/02_preprocess", exist_ok=True)
-   ```
-
-4. **Never modify files in `data/`.**  
-   Treat this directory as read-only input.
-
----
-
-## 🔁 Input/Output Conventions
-
-### Inputs
-- `data/` directory for raw or reference data  
-- `output/<previous_step>/` for intermediate results  
-
-### Outputs
-- Write all results, plots, and logs to:
-  ```
-  output/<current_step_name>/
-  ```
-
-### File Examples
-```
-output/02_preprocess/processed_data.csv
-output/02_preprocess/metadata.json
-output/03_analyze/figures/accuracy_plot.png
-```
-
----
-
-## 🧩 Metadata and Logging
-
-Each script should generate a `metadata.json` file inside its output directory.
-
-**Example:**
-```json
-{
-  "script": "02_preprocess.R",
-  "input": "../output/01_load_data/",
-  "parameters": {"filter_threshold": 0.05},
-  "date": "2025-11-12T12:00:00Z",
-  "runtime_seconds": 128.4,
-  "random_seed": 42
-}
-```
-
-Recommended contents:
-- script name  
-- input sources  
-- parameters or arguments  
-- execution date/time  
-- runtime and software versions  
-- notes or comments (optional)
-
----
-
-## 🧬 Reproducibility Rules
-
-- Each step must be runnable independently once previous outputs exist.  
-- Use **relative paths only** (no absolute paths).  
-- Always set **random seeds** for reproducibility.  
-- Never overwrite outputs unless explicitly rerunning a step.  
-- Log parameters and environment info for each execution.  
-
----
-
-## 🪶 Agent Behavior Protocol
-
-When given an instruction, the agent should:
-
-1. Identify the correct script in `code/` based on task description or prefix.  
-2. Verify required inputs exist in `data/` or the previous `output/` directory.  
-3. Create the corresponding output subdirectory if needed.  
-4. Execute or simulate the logic of the script.  
-5. Write all generated files to `output/<script_name>/`.  
-6. Save or update the `metadata.json`.  
-7. Avoid modifying any data or outputs not belonging to the current step.
-
----
-
-## 🧱 Naming and Structure
-
-- **Scripts:** `NN_description.ext` (e.g., `03_visualize_results.R`)  
-- **Output folders:** `output/NN_description/`  
-- **Output files:** use clear, lowercase, hyphenated names (e.g., `summary-stats.csv`, not `SummaryStats.csv`).
-
-Avoid spaces or uppercase letters in file and folder names.
-
----
-
-## 🚨 Error Handling
-
-If an expected input file or folder is missing:
-1. Report which dependency is missing (e.g., `output/01_load_data/clean_data.csv not found`).
-2. Do not create placeholder outputs.
-3. Stop execution and notify that the previous step must be completed first.
-
-If an output directory already exists:
-- Write new files with version suffixes (e.g., `_v2`, `_rerun`), or
-- Append a timestamp to avoid overwriting existing results.
-
----
-
-## 📊 Example Directory Snapshot
+## Layout
 
 ```
-repo/
-├── code/
-│   ├── 01_load_data.py
-│   ├── 02_preprocess.R
-│   ├── 03_visualize_results.R
-│   └── 04_analyze.ipynb
-├── data/
-│   ├── raw_input.csv
-│   └── metadata.yaml
-└── output/
-    ├── 01_load_data/
-    │   ├── clean_data.csv
-    │   └── metadata.json
-    ├── 02_preprocess/
-    │   ├── processed_data.csv
-    │   └── metadata.json
-    ├── 03_visualize_results/
-    │   ├── accuracy_plot.png
-    │   └── metadata.json
-    └── 04_analyze/
-        ├── model_output.pkl
-        └── summary_report.html
+oly-lc-WGS/
+├── code/      analysis scripts, numbered in execution order
+├── data/      raw FASTQs and the reference genome (read-only, not tracked)
+├── docs/      plans and notes that are not tied to a single step
+└── output/    one subdirectory per script, named to match
 ```
 
----
+| Script | Writes to | Depends on |
+| --- | --- | --- |
+| `code/01_align_and_visualize.py` | `output/01_align_and_visualize/` | `data/raw/`, `data/genome/` |
+| `code/02_bam_summary.py` | `output/02_bam_summary/` | step 01 BAMs, sample sheet, reference `.fai` |
+| `code/03_variant_summary.py` | `output/03_variant_summary/` | step 01 filtered VCF, PLINK dataset, sample sheet |
+| `code/04_environmental_data.py` | `output/04_environmental_data/` | step 01 sample sheet; live NOAA endpoints |
 
-## ✅ Quick Checklist
+Steps 02, 03, and 04 are independent of one another and only need step 01's
+outputs. Step 04 needs network access and no bioinformatics tools.
 
-- [ ] Execute scripts in numeric order  
-- [ ] Read only from `data/` or previous outputs  
-- [ ] Write to `output/<script_name>/`  
-- [ ] Include a `metadata.json` in every output directory  
-- [ ] Avoid overwriting or altering data files  
-- [ ] Maintain relative paths and reproducibility
+## Running
+
+- Run from the repository root: `python code/NN_name.py [flags]`. Steps 01 to
+  03 change directory to the repo root themselves; step 04 resolves paths
+  relative to the current directory, so it must be launched from the root.
+- Python 3.8 or newer with `numpy`, `pandas`, and `matplotlib`. Step 02 also
+  needs `pysam`.
+- External tools on `PATH`: `bwa`, `samtools`, `bcftools`, `plink` (step 01);
+  `samtools` (step 02); `bcftools`, `plink` (step 03). Each script checks for
+  its tools at startup and exits with the missing names.
+- Thread counts are capped at 50 via `--threads`. The production run used
+  `--threads 32 --threads-per-sample 4` on the UW Hyak cluster.
+
+## Inputs and outputs
+
+- Never write to `data/`. Step 01 symlinks the genome into
+  `output/01_align_and_visualize/reference/` and builds indices there.
+- Read inputs only from `data/` or from an earlier step's `output/` directory.
+  Write only to your own step's directory.
+- Use paths relative to the repository root in code and in committed tables.
+  Absolute paths belong only in logs.
+- Sample identity flows from file names. Step 01 derives `sample_id` and
+  `location` from FASTQ prefixes (see `data/README.md`) and writes
+  `output/01_align_and_visualize/metrics/sample_metadata.tsv`. Every later
+  step reads locations from that file rather than re-deriving them.
+- Locations beginning with `Blank` are negative controls. They are kept unless
+  `--skip-blanks` is passed to step 01; downstream summaries should exclude or
+  flag them.
+
+## Metadata and logging
+
+Every step writes `metadata.json` in its output directory with at least:
+script name, ISO-8601 UTC timestamp, runtime in seconds, all parameters, and
+the paths of the files it produced (relative to the repo root). Step 04 also
+records source URLs and library versions; new steps should do the same.
+
+Steps 01 to 03 log to `logs/pipeline.log` and to stdout through the `logging`
+module. Both `metadata.json` and the log are overwritten on each run.
+
+## Reruns and idempotence
+
+- Scripts skip any expensive product that already exists (BAMs, VCFs, PLINK
+  files, `samtools stats` reports) and pass `--force` to recompute.
+- Random sampling must be seeded. Step 02 exposes `--seed` (default 42) and
+  records it in `metadata.json`.
+- A missing input is an error: raise `FileNotFoundError` naming the path, do
+  not create placeholder outputs, and say which step must run first. Step 04
+  prints the missing path and exits with status 1.
+- Do not write versioned or timestamped copies. Rerunning a step replaces its
+  outputs in place; the git history is the record of earlier results.
+
+## What to commit
+
+- Commit scripts, documentation, small tables, figures, logs, and
+  `metadata.json`.
+- Do not commit BAMs, VCFs, PLINK binaries, reference indices, `tmp/`
+  directories, or `__pycache__/`. `output/01_align_and_visualize/.gitignore`
+  and the root `.gitignore` already exclude these.
+- Update `code/README.md` when a step's inputs, outputs, or flags change, and
+  `README.md` when committed results change.
+
+## Adding a step
+
+1. Number it after the last existing script (`code/05_<name>.py`) and create
+   `output/05_<name>/`.
+2. Take inputs from `data/` or earlier `output/` directories via `argparse`
+   flags with the repo-relative defaults shown in the existing scripts.
+3. Reuse the patterns already in place: dependency check, `logging` to file and
+   stdout, skip-if-exists with `--force`, `metadata.json` on completion.
+4. Add `from __future__ import annotations` so `X | Y` type hints run on
+   Python 3.8 and 3.9.
+5. Document the step in `code/README.md` and add a row to the workflow table in
+   `README.md`.
+
+## Naming
+
+- Scripts: `NN_snake_case.py`.
+- Output files: lowercase, hyphen- or underscore-separated, no spaces. The
+  existing steps mix `snake_case` (01 to 03) and `kebab-case` (04); either is
+  acceptable, but be consistent within a step.
