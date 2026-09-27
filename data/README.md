@@ -11,6 +11,7 @@ README is committed.
 | --- | --- | --- |
 | `raw/` | Paired-end Illumina FASTQs, one R1/R2 pair per sample | No |
 | `genome/Olurida_v081.fa` | Olympia oyster reference assembly (v081, ~1.14 Gb, highly fragmented: contig IDs run past 680,000) | No |
+| `genome/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna` | NCBI reference assembly xbOstLuri2 (USDA-ARS / PSRF, GCA_061535525.1, chromosome-level: 10 chromosomes, 517 sequences, 1.03 Gb, scaffold N50 100 Mb, released 2026-09-21), with its NCBI `*_sequence_report.jsonl` and `*_assembly_data_report.jsonl` beside it. Used by step 05. | No |
 
 The analysis copy of the repository, with `raw/` and `genome/` populated, lives on
 the UW Hyak cluster at `/mmfs1/gscratch/scrubbed/sr320/github/oly-lc-WGS/`.

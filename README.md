@@ -25,6 +25,7 @@ Additional details for each analysis step are documented in
 | 2 | `code/02_bam_summary.py` | Summarize mismatch, heterozygosity, IBS, and PCA directly from BAMs without rerunning variant calling | `output/02_bam_summary/tables/`, `figures/bam_connectedness.png` |
 | 3 | `code/03_variant_summary.py` | Generate VCF/PLINK-based variant quality and diversity summaries | `output/03_variant_summary/` |
 | 4 | `code/04_environmental_data.py` | Match each putative sampling site to nearby NOAA buoys/stations and download recent observations | `output/04_environmental_data/` |
+| 5 | `code/05_realign_xbOstLuri2.Rmd` | Re-align all samples to the chromosome-level NCBI reference GCA_061535525.1 (xbOstLuri2) with read groups and duplicate marking, via SLURM array jobs | `output/05_realign_xbOstLuri2/alignments/`, `metrics/`, `figures/` |
 
 ## Requirements
 
@@ -45,6 +46,7 @@ python code/01_align_and_visualize.py --threads 32 --threads-per-sample 4
 python code/02_bam_summary.py --num-sites 500
 python code/03_variant_summary.py --threads 32
 python code/04_environmental_data.py --days 30 --radius-km 75
+Rscript -e 'rmarkdown::render("code/05_realign_xbOstLuri2.Rmd")'   # or run its chunks in RStudio
 ```
 
 All outputs are written with relative paths so results remain reproducible across
