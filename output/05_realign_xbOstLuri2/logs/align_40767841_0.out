@@ -1,0 +1,17 @@
+/opt/ohpc/admin/lmod/lmod/init/bash: line 93: LD_LIBRARY_PATH: unbound variable
+start 2026-09-27T11:55:05Z host n3432 sample=Blank_plate1 location=Blank
+[M::bwa_idx_load_from_disk] read 0 ALT contigs
+[M::process] read 666 sequences (99900 bp)...
+[M::mem_pestat] # candidate unique pairs for (FF, FR, RF, RR): (0, 0, 0, 0)
+[M::mem_pestat] skip orientation FF as there are not enough pairs
+[M::mem_pestat] skip orientation FR as there are not enough pairs
+[M::mem_pestat] skip orientation RF as there are not enough pairs
+[M::mem_pestat] skip orientation RR as there are not enough pairs
+[M::mem_process_seqs] Processed 666 reads in 0.159 CPU sec, 0.032 real sec
+[main] Version: 0.7.19-r1273
+[main] CMD: bwa mem -t 16 -R @RG\tID:Blank_plate1\tSM:Blank_plate1\tLB:Blank_plate1\tPL:ILLUMINA output/05_realign_xbOstLuri2/reference/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna data/raw/Blank_plate1_S92_L004_R1_001.fastq.gz data/raw/Blank_plate1_S92_L004_R2_001.fastq.gz
+[main] Real time: 0.694 sec; CPU: 0.461 sec
+[bam_sort_core] merging from 0 files and 8 in-memory blocks...
+samtools markdup: warning, unable to calculate estimated library size. Read pairs 13 should be greater than duplicate pairs 0, which should both be non zero.
+
+end 2026-09-27T11:55:08Z sample=Blank_plate1
