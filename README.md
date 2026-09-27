@@ -25,6 +25,7 @@ Additional details for each analysis step are documented in
 | 2 | `code/02_bam_summary.py` | Summarize mismatch, heterozygosity, IBS, and PCA directly from BAMs without rerunning variant calling | `output/02_bam_summary/tables/`, `figures/bam_connectedness.png` |
 | 3 | `code/03_variant_summary.py` | Generate VCF/PLINK-based variant quality and diversity summaries | `output/03_variant_summary/` |
 | 4 | `code/04_environmental_data.py` | Match each putative sampling site to nearby NOAA buoys/stations and download recent observations | `output/04_environmental_data/` |
+| 5 | `code/05_realign_xbOstLuri2.Rmd` | Re-align all samples to the chromosome-level NCBI reference GCA_061535525.1 (xbOstLuri2) with read groups and duplicate marking, via SLURM array jobs | `output/05_realign_xbOstLuri2/alignments/`, `metrics/`, `figures/` |
 
 ## Requirements
 
@@ -45,6 +46,7 @@ python code/01_align_and_visualize.py --threads 32 --threads-per-sample 4
 python code/02_bam_summary.py --num-sites 500
 python code/03_variant_summary.py --threads 32
 python code/04_environmental_data.py --days 30 --radius-km 75
+Rscript -e 'rmarkdown::render("code/05_realign_xbOstLuri2.Rmd")'   # or run its chunks in RStudio
 ```
 
 All outputs are written with relative paths so results remain reproducible across
@@ -143,6 +145,29 @@ Step 01 connectedness figure:
 Step 02 BAM-based connectedness figure:
 
 ![BAM-based connectedness across samples](output/02_bam_summary/figures/bam_connectedness.png)
+
+### Step 05 re-alignment to xbOstLuri2 (2026-09-27)
+
+All 112 samples were re-aligned to the chromosome-level NCBI reference
+GCA_061535525.1 (xbOstLuri2) by `code/05_realign_xbOstLuri2.Rmd`, with read
+groups and duplicate marking. Every task completed; per-sample tables are in
+[`output/05_realign_xbOstLuri2/metrics/`](output/05_realign_xbOstLuri2/metrics/).
+
+| Metric (110 non-blank samples) | Olurida_v081 (step 01) | xbOstLuri2 (step 05) |
+| --- | ---: | ---: |
+| Mean depth, median across samples | 5.55x | 7.15x |
+| Depth ratio xbOstLuri2 / v081, median | | 1.28 |
+| Primary reads mapped, location means | | 96.5 to 99.0% |
+| Duplicates (marked), location means | not marked | 12.5 to 21.6% |
+| Mean MAPQ | 53 | 37 |
+
+The lower mean MAPQ is expected: reads that v081 placed with low but nonzero
+confidence among fragmented contigs are now MAPQ 0 on repeat copies that are
+actually assembled, while the share of reads at MAPQ 30 or higher is unchanged
+(67% in Coos_Bay_7 on both). Filter on MAPQ 20 or 30 downstream as before.
+`HC18_Triton_Wild_10` remains the low-coverage outlier (0.78x, 79% mapped).
+
+![Depth on v081 versus xbOstLuri2 and mapping rate by location](output/05_realign_xbOstLuri2/figures/depth_v081_vs_xbOstLuri2.png)
 
 ### Current status of later-stage summaries
 

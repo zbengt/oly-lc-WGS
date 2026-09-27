@@ -127,3 +127,33 @@ Environmental context for each putative sampling site from nearby buoys and shor
   - Site coordinates are approximate centroids for interpreted sites, not recorded collection points; ambiguous locations (`CS18_22_Wild_plate1`, `LS`, `MB`, `WB`) are flagged `uncertain`.
   - A station may advertise water temperature but return nothing for the window, so the script walks outwards until one delivers data.
   - NANOOS/UW ORCA moorings are listed as pointers only; their data are openly served from the NANOOS ERDDAP and ingesting them is planned separately (see `docs/environmental-data-access-plan.md`).
+
+## 05_realign_xbOstLuri2.Rmd
+
+Re-alignment of every sample to the chromosome-level NCBI reference
+GCA_061535525.1 (xbOstLuri2, USDA-ARS / PSRF, released 2026-09-21), replacing the
+Olurida_v081 alignments from step 01 for all downstream genetics.
+
+- **Inputs**
+  - Paired-end FASTQs in `data/raw/` (restored from the gannet backup by the `restore-fastq` chunk if missing)
+  - `data/genome/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna` (from NCBI Datasets)
+  - Sample sheet from step 01 (`output/01_align_and_visualize/metrics/sample_metadata.tsv`)
+- **Execution**
+  - Open in RStudio on Hyak and run the chunks in order, or `Rscript -e 'rmarkdown::render("code/05_realign_xbOstLuri2.Rmd")'`.
+  - `restore-fastq`, `index-genome` and `align` each submit a SLURM job (`coenv` / `cpu-g2`) and return; `align`
+    is a 112-task array, 24 at a time, chained to the other two with `--dependency=afterok`. The `status` chunk
+    reports progress; run the summary and metadata chunks after every sample has a BAM.
+  - Tools come from `/mmfs1/gscratch/srlab/containers/srlab-R4.4-bioinformatics-container-c3d3116.sif`
+    (bwa 0.7.19, samtools 1.20); nothing needs to be installed.
+- **Outputs**
+  - `output/05_realign_xbOstLuri2/alignments/` sorted, duplicate-marked BAM + index per sample (gitignored)
+  - `output/05_realign_xbOstLuri2/reference/` genome symlink plus BWA, faidx and dict indices (gitignored)
+  - `output/05_realign_xbOstLuri2/metrics/` per-sample `flagstat`, `coverage` and `markdup` reports,
+    `coverage_summary.tsv`, `coverage_by_location.tsv`, `comparison_v081.tsv`
+  - `output/05_realign_xbOstLuri2/figures/depth_v081_vs_xbOstLuri2.png`
+  - `output/05_realign_xbOstLuri2/metadata.json` and `logs/`
+- **Notes**
+  - Each BAM carries `@RG` with `ID`, `SM`, `LB` and `PL` set to the sample ID.
+  - Duplicates are marked (flag 1024) with `samtools markdup`, not removed; step 01 never marked them.
+  - A sample is skipped when its `metrics/per_sample/<sample>.coverage.tsv` is newer than its BAM; BAMs are
+    written as `.part` and renamed on success, so interrupted tasks are redone on the next submission.

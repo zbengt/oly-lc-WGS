@@ -1,0 +1,441 @@
+---
+title: "05 - Re-align to the xbOstLuri2 chromosome assembly"
+output: html_document
+---
+
+Re-align all 112 lc-WGS samples to the new *Ostrea lurida* reference,
+GCA_061535525.1 xbOstLuri2 (USDA-ARS / PSRF, chromosome-level, 10 chromosomes,
+1.03 Gb, released on NCBI 2026-09-21). The step 01 BAMs and VCFs were built
+against Olurida_v081, a scaffold assembly with 466,560 sequences and a 12.9 kb
+N50, so every downstream genetic result should move to these BAMs.
+
+Differences from the step 01 alignment, both standard for lc-WGS:
+
+- Duplicates are marked with `samtools markdup` (flag 1024, not removed), so
+  downstream tools can drop them. Step 01 never marked duplicates.
+- Each BAM carries `@RG` with `ID`, `SM`, `LB` and `PL`, so bcftools, ANGSD and
+  PLINK name samples by ID.
+
+Inputs and outputs:
+
+- Input reads: `data/raw/*.fastq.gz` (restored from gannet below if missing)
+- Input genome: `data/genome/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna`
+- Sample sheet: `output/01_align_and_visualize/metrics/sample_metadata.tsv` (step 01 derives
+  `sample_id` and `location` from the FASTQ names; this step reuses it rather than re-deriving)
+- Output BAMs: `output/05_realign_xbOstLuri2/alignments/` (gitignored)
+- Output reference and indices: `output/05_realign_xbOstLuri2/reference/` (gitignored)
+- Output metrics, figure, logs, `metadata.json`: `output/05_realign_xbOstLuri2/`
+
+Tools come from the Roberts Lab container
+`/mmfs1/gscratch/srlab/containers/srlab-R4.4-bioinformatics-container-c3d3116.sif`
+(bwa 0.7.19-r1273, samtools 1.20). Nothing needs to be installed.
+
+Every heavy chunk submits a SLURM job on `coenv` / `cpu-g2` and returns at once,
+writing the job id to `output/05_realign_xbOstLuri2/tmp/<name>.jobid`. Chunks
+skip work whose outputs already exist, so rerunning the file picks up where it
+left off. The alignment array waits on the restore and index jobs through a
+SLURM dependency, so all three can be submitted in one sitting. Use the
+`status` chunk to watch progress and run the summary chunks once every sample
+has a BAM.
+
+```{r setup, include=FALSE}
+# Paths are relative to code/, so chunks work the same run one at a time or knitted
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
+```
+
+# Directories
+
+```{bash dirs}
+set -euo pipefail
+mkdir -p ../output/05_realign_xbOstLuri2/{reference,alignments,metrics/per_sample,figures,logs,tmp}
+ls ../output/05_realign_xbOstLuri2
+```
+
+# Restore FASTQs from gannet
+
+`data/raw/` is not tracked and gets purged from scrubbed storage. The full set
+(224 files, 526 GB) is on the gannet web backup. This checks every file named
+in the sample sheet against the server's size and downloads whatever is missing
+or incomplete, six streams at a time on a compute node. Complete files are left
+alone, and `wget -c` resumes partial ones.
+
+```{bash restore-fastq}
+set -euo pipefail
+repo=$(cd .. && pwd)
+out=output/05_realign_xbOstLuri2
+sheet=output/01_align_and_visualize/metrics/sample_metadata.tsv
+gannet=https://gannet.fish.washington.edu/v1_web/owlshell/bu-github/oly-lc-WGS
+
+cd "${repo}"
+mkdir -p data/raw
+tail -n +2 "${sheet}" | cut -f3,4 | tr '\t' '\n' | sort -u > ${out}/tmp/fastq_expected.txt
+
+# Which files are missing or smaller than on gannet? (parallel HEAD requests)
+: > ${out}/tmp/fastq_needed.txt
+xargs -P 16 -I{} bash -c '
+  f={}; url="'"${gannet}"'/$f"
+  remote=$(curl -sI -m 60 "$url" | awk "tolower(\$1)==\"content-length:\" {gsub(\"\r\",\"\",\$2); print \$2}")
+  local=$(stat -c %s "$f" 2>/dev/null || echo 0)
+  [[ -n "$remote" && "$local" == "$remote" ]] || echo "$f"
+' < ${out}/tmp/fastq_expected.txt > ${out}/tmp/fastq_needed.txt
+
+needed=$(wc -l < ${out}/tmp/fastq_needed.txt)
+echo "FASTQs expected: $(wc -l < ${out}/tmp/fastq_expected.txt); missing or incomplete: ${needed}"
+if [[ "${needed}" -eq 0 ]]; then
+  rm -f ${out}/tmp/restore-fastq.jobid
+  exit 0
+fi
+
+cat > ${out}/tmp/restore_fastq.sh <<EOF
+#!/bin/bash
+#SBATCH --job-name=oly-restore-fastq
+#SBATCH --account=coenv
+#SBATCH --partition=cpu-g2
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=16G
+#SBATCH --time=12:00:00
+#SBATCH --output=${repo}/${out}/logs/restore_fastq_%j.out
+#SBATCH --chdir=${repo}
+set -uo pipefail
+echo "start \$(date -u +%FT%TZ) host \$(hostname)"
+xargs -P 6 -I{} wget -c -nv --tries=10 --timeout=120 --waitretry=30 -P data/raw "${gannet}/{}" \
+  < ${out}/tmp/fastq_needed.txt
+# verify sizes
+bad=0
+while read -r f; do
+  remote=\$(curl -sI -m 60 "${gannet}/\$f" | awk 'tolower(\$1)=="content-length:" {gsub("\r","",\$2); print \$2}')
+  local=\$(stat -c %s "\$f" 2>/dev/null || echo 0)
+  [[ "\$local" == "\$remote" ]] || { echo "MISMATCH \$f local=\$local remote=\$remote"; bad=1; }
+done < ${out}/tmp/fastq_needed.txt
+echo "end \$(date -u +%FT%TZ) mismatches=\${bad}"
+exit \${bad}
+EOF
+
+jid=$(sbatch --parsable ${out}/tmp/restore_fastq.sh)
+echo "${jid}" > ${out}/tmp/restore-fastq.jobid
+echo "submitted restore job ${jid} for ${needed} files; log: ${out}/logs/restore_fastq_${jid}.out"
+```
+
+# Index the genome
+
+Symlinks the NCBI FASTA into the step's `reference/` directory and builds the
+BWA index, `faidx` index and sequence dictionary there, leaving `data/` untouched
+(same layout as step 01). `bwa index` is single-threaded and takes roughly an hour
+for 1 Gb.
+
+```{bash index-genome}
+set -euo pipefail
+repo=$(cd .. && pwd)
+out=output/05_realign_xbOstLuri2
+genome=GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna
+container=/mmfs1/gscratch/srlab/containers/srlab-R4.4-bioinformatics-container-c3d3116.sif
+
+cd "${repo}"
+[[ -s data/genome/${genome} ]] || { echo "data/genome/${genome} is missing; download it from NCBI first" >&2; exit 1; }
+[[ -e ${out}/reference/${genome} ]] || ln -s ../../../data/genome/${genome} ${out}/reference/${genome}
+
+done=1
+for ext in amb ann bwt pac sa fai; do [[ -s ${out}/reference/${genome}.${ext} ]] || done=0; done
+[[ -s ${out}/reference/${genome%.fna}.dict ]] || done=0
+if [[ "${done}" -eq 1 ]]; then
+  echo "index already built, skipping"
+  rm -f ${out}/tmp/index-genome.jobid
+  exit 0
+fi
+
+cat > ${out}/tmp/index_genome.sh <<EOF
+#!/bin/bash
+#SBATCH --job-name=oly-index
+#SBATCH --account=coenv
+#SBATCH --partition=cpu-g2
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=16G
+#SBATCH --time=6:00:00
+#SBATCH --output=${repo}/${out}/logs/index_genome_%j.out
+#SBATCH --chdir=${repo}
+set -euo pipefail
+module load apptainer
+echo "start \$(date -u +%FT%TZ) host \$(hostname)"
+apptainer exec --bind /mmfs1 ${container} bash -c '
+  set -euo pipefail
+  cd ${out}/reference
+  bwa index ${genome}
+  samtools faidx ${genome}
+  samtools dict ${genome} -o ${genome%.fna}.dict
+'
+echo "end \$(date -u +%FT%TZ)"
+EOF
+
+jid=$(sbatch --parsable ${out}/tmp/index_genome.sh)
+echo "${jid}" > ${out}/tmp/index-genome.jobid
+echo "submitted index job ${jid}; log: ${out}/logs/index_genome_${jid}.out"
+```
+
+# Align
+
+One SLURM array task per sample, 24 running at once, 16 cores and 40 GB each.
+Per sample:
+
+```
+bwa mem -t 16 -R '@RG...' genome R1 R2 \
+  | samtools fixmate -m | samtools sort | samtools markdup
+samtools index; samtools flagstat; samtools coverage
+```
+
+A sample is skipped when its `metrics/per_sample/<sample>.coverage.tsv` exists
+and is newer than its BAM, which is the last thing the task writes. The BAM is
+written as `.part` and renamed on success, so a task killed mid-way never
+leaves a BAM that looks finished. Rerun this chunk to redo failed samples.
+
+The array is submitted with `--dependency=afterok` on the restore and index jobs
+if either is still queued or running. About 45 M read pairs per sample against a
+1 Gb genome takes on the order of 1 to 2 hours per task.
+
+```{bash align}
+set -euo pipefail
+repo=$(cd .. && pwd)
+out=output/05_realign_xbOstLuri2
+genome=GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna
+sheet=output/01_align_and_visualize/metrics/sample_metadata.tsv
+container=/mmfs1/gscratch/srlab/containers/srlab-R4.4-bioinformatics-container-c3d3116.sif
+max_concurrent=24
+
+cd "${repo}"
+n=$(($(wc -l < "${sheet}") - 1))
+echo "samples in sheet: ${n}"
+
+# Wait on prerequisite jobs that are still in the queue
+deps=()
+for name in restore-fastq index-genome; do
+  f=${out}/tmp/${name}.jobid
+  if [[ -s "${f}" ]] && squeue -h -j "$(cat "${f}")" >/dev/null 2>&1 && [[ -n "$(squeue -h -j "$(cat "${f}")")" ]]; then
+    deps+=("$(cat "${f}")")
+  fi
+done
+dep_arg=""
+if [[ ${#deps[@]} -gt 0 ]]; then
+  dep_arg="--dependency=afterok:$(IFS=:; echo "${deps[*]}")"
+  echo "will wait for job(s): ${deps[*]}"
+fi
+
+cat > ${out}/tmp/align_array.sh <<EOF
+#!/bin/bash
+#SBATCH --job-name=oly-align
+#SBATCH --account=coenv
+#SBATCH --partition=cpu-g2
+#SBATCH --array=0-$((n - 1))%${max_concurrent}
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=40G
+#SBATCH --time=12:00:00
+#SBATCH --output=${repo}/${out}/logs/align_%A_%a.out
+#SBATCH --chdir=${repo}
+set -euo pipefail
+module load apptainer
+
+line=\$(sed -n "\$((SLURM_ARRAY_TASK_ID + 2))p" ${sheet})
+IFS=\$'\t' read -r sample location r1 r2 <<< "\${line}"
+bam=${out}/alignments/\${sample}.sorted.bam
+per=${out}/metrics/per_sample
+tmp=${out}/tmp/\${sample}
+echo "start \$(date -u +%FT%TZ) host \$(hostname) sample=\${sample} location=\${location}"
+
+if [[ -s "\${bam}" && -s "\${bam}.bai" && -s "\${per}/\${sample}.coverage.tsv" && "\${per}/\${sample}.coverage.tsv" -nt "\${bam}" ]]; then
+  echo "\${sample}: already aligned, skipping"; exit 0
+fi
+for f in "\${r1}" "\${r2}"; do [[ -s "\$f" ]] || { echo "missing \$f" >&2; exit 1; }; done
+mkdir -p "\${tmp}" "\${per}"
+export sample bam per tmp r1 r2   # read inside the container shell below
+
+apptainer exec --bind /mmfs1 ${container} bash -c '
+  set -euo pipefail
+  ref=${out}/reference/${genome}
+  bwa mem -t 16 -R "@RG\\tID:\${sample}\\tSM:\${sample}\\tLB:\${sample}\\tPL:ILLUMINA" "\${ref}" "\${r1}" "\${r2}" \\
+    | samtools fixmate -m -@ 4 - - \\
+    | samtools sort -@ 8 -m 1G -T "\${tmp}/sort" - \\
+    | samtools markdup -@ 4 -s -f "\${per}/\${sample}.markdup.txt" - "\${bam}.part"
+  mv "\${bam}.part" "\${bam}"
+  samtools index -@ 16 "\${bam}"
+  samtools flagstat -@ 16 -O tsv "\${bam}" > "\${per}/\${sample}.flagstat.tsv"
+  samtools coverage "\${bam}" > "\${per}/\${sample}.coverage.tsv"
+'
+rm -rf "\${tmp}"
+echo "end \$(date -u +%FT%TZ) sample=\${sample}"
+EOF
+
+jid=$(sbatch --parsable ${dep_arg} ${out}/tmp/align_array.sh)
+echo "${jid}" > ${out}/tmp/align.jobid
+echo "submitted alignment array ${jid} (${n} tasks, ${max_concurrent} at a time); logs: ${out}/logs/align_${jid}_*.out"
+```
+
+# Status
+
+```{bash status}
+set -uo pipefail
+out=../output/05_realign_xbOstLuri2
+for name in restore-fastq index-genome align; do
+  f=${out}/tmp/${name}.jobid
+  [[ -s "$f" ]] || continue
+  jid=$(cat "$f")
+  printf "%-14s job %-10s " "$name" "$jid"
+  squeue -h -j "$jid" -o "%T" 2>/dev/null | sort | uniq -c | tr '\n' ' '
+  echo
+done
+sheet=../output/01_align_and_visualize/metrics/sample_metadata.tsv
+n=$(($(wc -l < "$sheet") - 1))
+echo "BAMs finished: $(find ${out}/metrics/per_sample -name "*.coverage.tsv" -size +0 2>/dev/null | wc -l) / ${n}"
+grep -l -E "Error|error|Killed|OOM|No space" ${out}/logs/align_*.out 2>/dev/null | head
+```
+
+# Alignment summary
+
+Runs once every sample has a BAM. Combines the per-sample `flagstat` and
+`coverage` output into two tables and compares depth and mapping quality with
+the Olurida_v081 alignments from step 01.
+
+```{r coverage-summary}
+out <- "../output/05_realign_xbOstLuri2"
+sheet <- read.delim("../output/01_align_and_visualize/metrics/sample_metadata.tsv", stringsAsFactors = FALSE)
+
+cov_files <- file.path(out, "metrics/per_sample", paste0(sheet$sample_id, ".coverage.tsv"))
+done <- file.exists(cov_files) & file.size(cov_files) > 0
+if (!all(done)) {
+  stop(sum(!done), " sample(s) not aligned yet: ", paste(head(sheet$sample_id[!done], 10), collapse = ", "))
+}
+
+summarize_sample <- function(sample) {
+  cov <- read.delim(file.path(out, "metrics/per_sample", paste0(sample, ".coverage.tsv")), comment.char = "", check.names = FALSE)
+  names(cov)[1] <- "rname"
+  len <- cov$endpos - cov$startpos + 1
+  fs <- read.delim(file.path(out, "metrics/per_sample", paste0(sample, ".flagstat.tsv")), header = FALSE,
+                   col.names = c("passed", "failed", "name"), stringsAsFactors = FALSE)
+  fs_num <- function(pattern) as.numeric(fs$passed[grep(pattern, fs$name)[1]])
+  primary <- fs_num("^primary$")
+  data.frame(
+    sample_id      = sample,
+    numreads       = sum(cov$numreads),
+    total_reads    = fs_num("^total"),
+    primary_mapped = fs_num("^primary mapped$"),
+    mapped_pct     = round(100 * fs_num("^primary mapped$") / primary, 2),
+    properly_paired_pct = round(100 * fs_num("^properly paired$") / primary, 2),
+    duplicate_pct  = round(100 * fs_num("^primary duplicates$") / primary, 2),
+    covbases       = sum(cov$covbases),
+    genome_length  = sum(len),
+    coverage_pct   = round(100 * sum(cov$covbases) / sum(len), 3),
+    meandepth      = round(sum(cov$meandepth * len) / sum(len), 4),
+    meanbaseq      = round(sum(cov$meanbaseq * cov$numreads) / max(1, sum(cov$numreads)), 2),
+    meanmapq       = round(sum(cov$meanmapq * cov$numreads) / max(1, sum(cov$numreads)), 2)
+  )
+}
+
+summary_tbl <- do.call(rbind, lapply(sheet$sample_id, summarize_sample))
+summary_tbl <- merge(sheet[, c("sample_id", "location")], summary_tbl, by = "sample_id")
+summary_tbl <- summary_tbl[order(summary_tbl$location, summary_tbl$sample_id), ]
+rownames(summary_tbl) <- NULL
+write.table(summary_tbl, file.path(out, "metrics/coverage_summary.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
+
+by_location <- aggregate(cbind(meandepth, mapped_pct, duplicate_pct) ~ location, summary_tbl, mean)
+by_location$samples <- as.vector(table(summary_tbl$location)[by_location$location])
+write.table(by_location, file.path(out, "metrics/coverage_by_location.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
+
+# Compare with the Olurida_v081 alignments from step 01
+v081 <- read.delim("../output/01_align_and_visualize/metrics/coverage_summary.tsv", stringsAsFactors = FALSE)
+cmp <- merge(summary_tbl[, c("sample_id", "location", "meandepth", "meanmapq", "mapped_pct")],
+             v081[, c("sample_id", "meandepth", "meanmapq")],
+             by = "sample_id", suffixes = c("_xbOstLuri2", "_v081"))
+cmp$depth_ratio <- round(cmp$meandepth_xbOstLuri2 / cmp$meandepth_v081, 3)
+write.table(cmp, file.path(out, "metrics/comparison_v081.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
+
+png(file.path(out, "figures/depth_v081_vs_xbOstLuri2.png"), width = 1600, height = 800, res = 150)
+par(mfrow = c(1, 2), mar = c(4.5, 4.5, 3, 1))
+blank <- cmp$location == "Blank"
+plot(cmp$meandepth_v081[!blank], cmp$meandepth_xbOstLuri2[!blank], pch = 19, col = "#3b6ea5",
+     xlab = "Mean depth, Olurida_v081", ylab = "Mean depth, xbOstLuri2", main = "Per-sample depth")
+abline(0, 1, lty = 2)
+boxplot(mapped_pct ~ location, summary_tbl[!blank, ], las = 2, cex.axis = 0.6, ylab = "Primary reads mapped (%)",
+        main = "Mapping rate by location", xlab = "")
+dev.off()
+
+summary(cmp[!blank, c("meandepth_v081", "meandepth_xbOstLuri2", "depth_ratio", "meanmapq_v081", "meanmapq_xbOstLuri2")])
+by_location
+```
+
+![](../output/05_realign_xbOstLuri2/figures/depth_v081_vs_xbOstLuri2.png)
+
+Things to check:
+
+- **meandepth**: non-blank samples averaged 5.3x on v081. The new genome is 10%
+  shorter and far less fragmented, so depth should be similar or slightly higher.
+- **meanmapq**: should rise. Many v081 contigs were short duplicated fragments
+  that pulled MAPQ down.
+- **duplicate_pct**: newly available. Anything far above the rest of its plate
+  is worth a look before variant calling.
+- **Blanks** should still have effectively no reads.
+
+# Metadata
+
+Records parameters, software and the produced files as `metadata.json`, following
+`INSTRUCTIONS.md`. Runtime is the summed elapsed time of the alignment array
+tasks from `sacct`.
+
+```{bash sacct}
+set -uo pipefail
+out=../output/05_realign_xbOstLuri2
+if [[ -s ${out}/tmp/align.jobid ]]; then
+  sacct -j "$(cat ${out}/tmp/align.jobid)" -P --format=JobID,State,Elapsed,MaxRSS --noheader \
+    | grep -v -E "\.batch|\.extern" > ${out}/logs/align_sacct.tsv
+  echo "array task states:"; cut -d'|' -f2 ${out}/logs/align_sacct.tsv | sort | uniq -c
+fi
+```
+
+```{r metadata}
+out <- "../output/05_realign_xbOstLuri2"
+repo_rel <- function(p) sub("^\\.\\./", "", p)
+
+runtime <- NA
+sacct_file <- file.path(out, "logs/align_sacct.tsv")
+if (file.exists(sacct_file) && file.size(sacct_file) > 0) {
+  s <- read.delim(sacct_file, sep = "|", header = FALSE, col.names = c("jobid", "state", "elapsed", "maxrss"), stringsAsFactors = FALSE)
+  to_sec <- function(x) {
+    d <- ifelse(grepl("-", x), suppressWarnings(as.numeric(sub("-.*", "", x))), 0)
+    hms <- sub(".*-", "", x)
+    p <- lapply(strsplit(hms, ":"), as.numeric)
+    d * 86400 + sapply(p, function(v) sum(v * 60^(rev(seq_along(v)) - 1)))
+  }
+  runtime <- sum(to_sec(s$elapsed[s$state == "COMPLETED"]))
+}
+
+sheet <- read.delim("../output/01_align_and_visualize/metrics/sample_metadata.tsv", stringsAsFactors = FALSE)
+bams <- file.path(out, "alignments", paste0(sheet$sample_id, ".sorted.bam"))
+metadata <- list(
+  script = "05_realign_xbOstLuri2.Rmd",
+  date = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+  runtime_seconds = runtime,
+  parameters = list(
+    genome_accession = "GCA_061535525.1",
+    genome_name = "xbOstLuri2 USDA-ARS PSRF primary",
+    genome_fasta = "data/genome/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna",
+    sample_sheet = "output/01_align_and_visualize/metrics/sample_metadata.tsv",
+    aligner = "bwa mem",
+    read_group = "@RG ID/SM/LB=<sample_id> PL=ILLUMINA",
+    duplicates = "marked with samtools markdup, not removed",
+    threads_per_sample = 16,
+    memory_per_sample_gb = 40,
+    max_concurrent_tasks = 24,
+    slurm = list(account = "coenv", partition = "cpu-g2")
+  ),
+  software = list(
+    container = "/mmfs1/gscratch/srlab/containers/srlab-R4.4-bioinformatics-container-c3d3116.sif",
+    bwa = "0.7.19-r1273",
+    samtools = "1.20",
+    R = R.version.string
+  ),
+  outputs = list(
+    alignments = repo_rel(bams[file.exists(bams)]),
+    reference = repo_rel(list.files(file.path(out, "reference"), full.names = TRUE)),
+    metrics = repo_rel(list.files(file.path(out, "metrics"), pattern = "\\.tsv$", full.names = TRUE)),
+    figures = repo_rel(list.files(file.path(out, "figures"), full.names = TRUE))
+  )
+)
+writeLines(jsonlite::toJSON(metadata, auto_unbox = TRUE, pretty = TRUE, na = "null"), file.path(out, "metadata.json"))
+cat(readLines(file.path(out, "metadata.json"), n = 25), sep = "\n")
+```
