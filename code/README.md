@@ -29,6 +29,39 @@ Low-coverage WGS alignment and genetic connectedness summary pipeline.
     plotting, but re-align with `--force` (or `samtools addreplacerg`) to fix the VCF.
   - The IBS heatmap plots PLINK's `.mibs` values directly (proportion of alleles
     shared); an earlier version inverted them.
+  - **PLINK contig subset.** PLINK 1.9 accepts at most 65,280 distinct
+    chromosome codes even with `--allow-extra-chr`, and `Olurida_v081` has
+    159,429 contigs (158,839 carry filtered variants), so the VCF is subset to
+    long contigs before conversion. Contig lengths are read from the reference
+    index `output/01_align_and_visualize/reference/Olurida_v081.fa.fai` (not the
+    VCF header); contigs with length `>= --plink-min-contig-length` are kept,
+    sorted longest-first, and truncated to `--plink-max-contigs`. The selection
+    is written to `variants/plink_contigs.txt` as a three-column
+    `bcftools -R` regions file (`contig<TAB>1<TAB>length`), the count is logged
+    with the genome fraction retained, and `metadata.json` records the
+    thresholds plus `plink_contigs_selected`. If the list on disk differs from
+    the current selection the subset VCF is rebuilt, so changing the flags or
+    the reference never silently reuses a stale `subset_for_plink.vcf.gz`.
+  - **Choosing the threshold.** The assembly is fragmented (N50 12.9 kb).
+    Retained by `--plink-min-contig-length` for `Olurida_v081`:
+
+    | min length | contigs | bp | genome | filtered variants |
+    |---:|---:|---:|---:|---:|
+    | 100 kb (old default) | 32 | 3.8 Mb | 0.33 % | 160 k |
+    | 50 kb | 894 | 57.7 Mb | 5.1 % | 2.6 M |
+    | 20 kb (default) | 11,501 | 360 Mb | 31.6 % | 16.2 M |
+    | 10 kb | 35,320 | 692 Mb | 60.6 % | 31.4 M |
+    | none | 159,429 | 1.14 Gb | 100 % | 56.1 M (exceeds PLINK limit) |
+
+    The default is 20 kb: it samples roughly a third of the genome across
+    ~11.5k independent contigs, stays well under the PLINK cap, and keeps the
+    subset VCF and PCA tractable. 10 kb is also valid (35k contigs) if more
+    sites are wanted; anything below ~7 kb exceeds the cap. Contigs are in any
+    case only a proxy for independence; ANGSD/PCAngsd on the BAMs would avoid
+    both the hard-call genotypes and the PLINK contig limit.
+  - Note: the committed `figures/genetic_connectedness.png` was produced before
+    this selection logic was fixed and rests on a single contig (`Contig19646`,
+    7,865 SNPs); see the note under *Generated figures* in the root `README.md`.
   - All outputs use relative paths to maintain reproducibility.
 
 ## 02_bam_summary.py
