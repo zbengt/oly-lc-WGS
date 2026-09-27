@@ -1903,3 +1903,4 @@ start 2026-09-27T11:55:05Z host n3447 sample=Coos_Bay_10 location=Coos_Bay
 [main] CMD: bwa mem -t 16 -R @RG\tID:Coos_Bay_10\tSM:Coos_Bay_10\tLB:Coos_Bay_10\tPL:ILLUMINA output/05_realign_xbOstLuri2/reference/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna data/raw/Coos_Bay_10_S107_L004_R1_001.fastq.gz data/raw/Coos_Bay_10_S107_L004_R2_001.fastq.gz
 [main] Real time: 4293.295 sec; CPU: 64303.641 sec
 [bam_sort_core] merging from 4 files and 8 in-memory blocks...
+end 2026-09-27T13:13:22Z sample=Coos_Bay_10

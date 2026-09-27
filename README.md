@@ -146,6 +146,29 @@ Step 02 BAM-based connectedness figure:
 
 ![BAM-based connectedness across samples](output/02_bam_summary/figures/bam_connectedness.png)
 
+### Step 05 re-alignment to xbOstLuri2 (2026-09-27)
+
+All 112 samples were re-aligned to the chromosome-level NCBI reference
+GCA_061535525.1 (xbOstLuri2) by `code/05_realign_xbOstLuri2.Rmd`, with read
+groups and duplicate marking. Every task completed; per-sample tables are in
+[`output/05_realign_xbOstLuri2/metrics/`](output/05_realign_xbOstLuri2/metrics/).
+
+| Metric (110 non-blank samples) | Olurida_v081 (step 01) | xbOstLuri2 (step 05) |
+| --- | ---: | ---: |
+| Mean depth, median across samples | 5.55x | 7.15x |
+| Depth ratio xbOstLuri2 / v081, median | | 1.28 |
+| Primary reads mapped, location means | | 96.5 to 99.0% |
+| Duplicates (marked), location means | not marked | 12.5 to 21.6% |
+| Mean MAPQ | 53 | 37 |
+
+The lower mean MAPQ is expected: reads that v081 placed with low but nonzero
+confidence among fragmented contigs are now MAPQ 0 on repeat copies that are
+actually assembled, while the share of reads at MAPQ 30 or higher is unchanged
+(67% in Coos_Bay_7 on both). Filter on MAPQ 20 or 30 downstream as before.
+`HC18_Triton_Wild_10` remains the low-coverage outlier (0.78x, 79% mapped).
+
+![Depth on v081 versus xbOstLuri2 and mapping rate by location](output/05_realign_xbOstLuri2/figures/depth_v081_vs_xbOstLuri2.png)
+
 ### Current status of later-stage summaries
 
 The variant-summary script is present in `code/03_variant_summary.py`, but the
