@@ -157,3 +157,40 @@ Olurida_v081 alignments from step 01 for all downstream genetics.
   - Duplicates are marked (flag 1024) with `samtools markdup`, not removed; step 01 never marked them.
   - A sample is skipped when its `metrics/per_sample/<sample>.coverage.tsv` is newer than its BAM; BAMs are
     written as `.part` and renamed on success, so interrupted tasks are redone on the next submission.
+
+## 06_angsd_structure.Rmd
+
+Population structure, admixture, diversity and pairwise Fst from genotype
+likelihoods on the step 05 xbOstLuri2 BAMs, replacing the hard-call PCA of
+step 01 (7,865 SNPs on one contig) with a genome-wide, low-coverage-appropriate
+analysis.
+
+- **Inputs**
+  - Sorted, duplicate-marked BAMs from step 05 (`output/05_realign_xbOstLuri2/alignments/`)
+  - Step 05 reference FASTA and `.fai`; chromosome list from `data/genome/GCA_061535525.1_sequence_report.jsonl`
+  - `output/05_realign_xbOstLuri2/metrics/coverage_summary.tsv` for sample selection (blanks and samples
+    under 2x mean depth are excluded: currently the two blanks and `HC18_Triton_Wild_10`, leaving 109)
+- **Execution**
+  - Run the chunks in order from RStudio, or `Rscript -e 'rmarkdown::render("code/06_angsd_structure.Rmd")'`.
+  - `angsd-gl` (44 windows of 25 Mb over the 10 chromosomes), `pcangsd`, `saf` (15 populations) and `fst`
+    (105 pairs) each submit SLURM jobs on `coenv` / `cpu-g2` and return; `pcangsd` and `fst` chain to their
+    prerequisites with `--dependency=afterok`. `status` reports progress; run the R chunks when done.
+  - Tools come from the conda env `/mmfs1/gscratch/srlab/sr320/miniforge3/envs/angsd` (ANGSD 0.940,
+    PCAngsd 1.36.4); rebuild with `mamba create -n angsd -c conda-forge -c bioconda angsd pcangsd`.
+- **Outputs**
+  - `output/06_angsd_structure/samples/` sample table, BAM lists per population, chromosome list, windows, pairs, GL parameters
+  - `output/06_angsd_structure/gl/` per-window and merged Beagle and `mafs` files (gitignored)
+  - `output/06_angsd_structure/pca/` PCAngsd covariance matrix, site mask, admixture Q and P for K = 2 to 6
+  - `output/06_angsd_structure/saf/` per-population SAF (gitignored); `sfs/` folded SFS and `thetaStat` summaries
+  - `output/06_angsd_structure/fst/` per-pair global Fst (`*.fst.txt`)
+  - `output/06_angsd_structure/tables/` PCA scores and variance, admixture per K, diversity by population,
+    Fst pairs and matrix, SNPs per chromosome
+  - `output/06_angsd_structure/figures/` `pca.png`, `admixture.png`, `fst_heatmap.png`
+  - `output/06_angsd_structure/metadata.json` and `logs/`
+- **Notes**
+  - Filters for every ANGSD run: MAPQ >= 20, base quality >= 20, unique proper pairs, `-remove_bads 1`
+    (drops the duplicates marked in step 05), BAQ with `-C 50`, site covered in >= 80% of samples, total
+    depth between a third and twice the summed mean depth of the samples in the run.
+  - Genotype likelihoods use `-GL 1` with `-SNP_pval 1e-6` and minor allele frequency >= 0.05; SFS use all
+    sites and are folded (the reference is not an ancestral sequence).
+  - Only the 10 chromosomes (995 of 1,029 Mb) are analysed; unplaced scaffolds are skipped.
