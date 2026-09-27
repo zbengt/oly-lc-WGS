@@ -132,6 +132,14 @@ Step 01 connectedness figure:
 
 ![Genetic connectedness across samples](output/01_align_and_visualize/figures/genetic_connectedness.png)
 
+> **Caveat.** This figure predates the fix to the PLINK contig selection in
+> `code/01_align_and_visualize.py`. The PLINK dataset behind it contains
+> 7,865 SNPs, all on `Contig19646` (194 kb, 0.02 % of the genome), because a
+> stale one-contig `subset_for_plink.vcf.gz` was reused. The current code
+> selects contigs from the reference `.fai` (default `>= 20 kb`, ~11.5k
+> contigs, ~32 % of the assembly); rerun step 01 with `--force` to regenerate
+> the PCA/IBS results and this figure. See `code/README.md` for details.
+
 Step 02 BAM-based connectedness figure:
 
 ![BAM-based connectedness across samples](output/02_bam_summary/figures/bam_connectedness.png)
