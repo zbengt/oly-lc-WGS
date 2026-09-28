@@ -1,0 +1,44 @@
+start 2026-09-27T20:55:25Z host n3457 window=CM196828.1:100000001-115857957
+	-> angsd version: 0.940-dirty (htslib: 1.24) build(Dec 15 2024 09:11:59)
+	-> angsd -b output/06_angsd_structure/samples/bam.list -ref output/05_realign_xbOstLuri2/reference/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna -r CM196828.1:100000001-115857957 -out output/06_angsd_structure/gl/014_CM196828.1_100000001-115857957 -GL 1 -doGlf 2 -doMajorMinor 1 -doMaf 1 -doCounts 1 -SNP_pval 1e-6 -minMaf 0.05 -minMapQ 20 -minQ 20 -uniqueOnly 1 -remove_bads 1 -only_proper_pairs 1 -C 50 -baq 1 -minInd 87 -setMinDepth 253 -setMaxDepth 1537 -P 8 
+	-> Inputtype is BAM/CRAM
+[multiReader] 109 samples in 109 input files
+	-> Reading fasta: output/05_realign_xbOstLuri2/reference/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna
+	-> SNP-filter using a pvalue: 1.000000e-06 correspond to 23.928127 likelihood units
+	-> Parsing 109 number of samples 
+	-> Region lookup 1/1
+	-> Allocated ~ 10 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 20 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 30 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 40 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 50 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 60 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 70 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 80 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 90 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 100 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 110 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 120 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 130 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 140 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 150 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 160 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 170 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 180 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 190 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 200 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 210 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 220 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Done reading data waiting for calculations to finish
+	-> Done waiting for threads
+	-> Output filenames:
+		->"output/06_angsd_structure/gl/014_CM196828.1_100000001-115857957.arg"
+		->"output/06_angsd_structure/gl/014_CM196828.1_100000001-115857957.beagle.gz"
+		->"output/06_angsd_structure/gl/014_CM196828.1_100000001-115857957.mafs.gz"
+	-> Sun Sep 27 14:36:35 2026
+	-> Arguments and parameters for all analysis are located in .arg file
+	-> Total number of sites analyzed: 15242084
+	-> Number of sites retained after filtering: 166201 
+	[ALL done] cpu-time used =  3140.15 sec
+	[ALL done] walltime used =  2470.00 sec
+end 2026-09-27T21:36:36Z window=CM196828.1:100000001-115857957 sites=166201

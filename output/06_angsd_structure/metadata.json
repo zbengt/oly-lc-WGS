@@ -1,0 +1,40 @@
+{
+  "script": "06_angsd_structure.Rmd",
+  "date": "2026-09-28T11:16:36Z",
+  "runtime_seconds": 882104,
+  "parameters": {
+    "bams": "output/05_realign_xbOstLuri2/alignments (step 05, xbOstLuri2)",
+    "samples_used": 109,
+    "populations": 15,
+    "excluded": ["Blank_plate1\tBlank\t0", "Blank_plate2\tBlank\t0", "HC18_Triton_Wild_10\tHC18_Triton_Wild\t0.7814"],
+    "regions": "10 chromosomes (CM196826.1 to CM196835.1), 25 Mb windows",
+    "filters": "minMapQ 20, minQ 20, uniqueOnly, remove_bads (incl. duplicates), only_proper_pairs, C 50, baq 1",
+    "genotype_likelihoods": {
+      "n": 109,
+      "min_ind": 87,
+      "set_min_depth": 253,
+      "set_max_depth": 1537,
+      "snp_pval": 1e-06,
+      "min_maf": 0.05
+    },
+    "sfs": "folded, reference as -anc; depth bounds 0.33x to 2x of summed mean depth per population; minInd 80%",
+    "pcangsd": "PCA with MAP-selected eigenvectors; admixture K = 2 to 6",
+    "slurm": {
+      "account": "coenv",
+      "partition": "cpu-g2"
+    }
+  },
+  "software": {
+    "conda_env": "/mmfs1/gscratch/srlab/sr320/miniforge3/envs/angsd",
+    "angsd": "0.940 (htslib 1.24)",
+    "pcangsd": "1.36.4",
+    "R": "R version 4.4.3 (2025-02-28)"
+  },
+  "outputs": {
+    "snp_sites": 7418858,
+    "tables": ["output/06_angsd_structure/tables/admixture_K2.tsv", "output/06_angsd_structure/tables/admixture_K3.tsv", "output/06_angsd_structure/tables/admixture_K4.tsv", "output/06_angsd_structure/tables/admixture_K5.tsv", "output/06_angsd_structure/tables/admixture_K6.tsv", "output/06_angsd_structure/tables/diversity_by_population.tsv", "output/06_angsd_structure/tables/fst_matrix.tsv", "output/06_angsd_structure/tables/fst_pairs.tsv", "output/06_angsd_structure/tables/pca_scores.tsv", "output/06_angsd_structure/tables/pca_variance.tsv", "output/06_angsd_structure/tables/snps_per_chromosome.tsv"],
+    "figures": ["output/06_angsd_structure/figures/admixture.png", "output/06_angsd_structure/figures/fst_heatmap.png", "output/06_angsd_structure/figures/pca.png"],
+    "pca": ["output/06_angsd_structure/pca/pcangsd.admix.2.P", "output/06_angsd_structure/pca/pcangsd.admix.2.Q", "output/06_angsd_structure/pca/pcangsd.admix.3.P", "output/06_angsd_structure/pca/pcangsd.admix.3.Q", "output/06_angsd_structure/pca/pcangsd.admix.4.P", "output/06_angsd_structure/pca/pcangsd.admix.4.Q", "output/06_angsd_structure/pca/pcangsd.admix.5.P", "output/06_angsd_structure/pca/pcangsd.admix.5.Q", "output/06_angsd_structure/pca/pcangsd.admix.6.P", "output/06_angsd_structure/pca/pcangsd.admix.6.Q", "output/06_angsd_structure/pca/pcangsd.cov", "output/06_angsd_structure/pca/pcangsd.freqs", "output/06_angsd_structure/pca/pcangsd.log", "output/06_angsd_structure/pca/pcangsd.sites"],
+    "sfs": ["output/06_angsd_structure/sfs/CS18_22_Wild_plate1.sfs", "output/06_angsd_structure/sfs/CS18_22_Wild_plate1.thetas.idx.pestPG", "output/06_angsd_structure/sfs/Coos_Bay.sfs", "output/06_angsd_structure/sfs/Coos_Bay.thetas.idx.pestPG", "output/06_angsd_structure/sfs/Dogfish_Bay.sfs", "output/06_angsd_structure/sfs/Dogfish_Bay.thetas.idx.pestPG", "output/06_angsd_structure/sfs/FB18_Wild.sfs", "output/06_angsd_structure/sfs/FB18_Wild.thetas.idx.pestPG", "output/06_angsd_structure/sfs/Fidalgo_Bay.sfs", "output/06_angsd_structure/sfs/Fidalgo_Bay.thetas.idx.pestPG", "output/06_angsd_structure/sfs/HC18_Triton_Wild.sfs", "output/06_angsd_structure/sfs/HC18_Triton_Wild.thetas.idx.pestPG", "output/06_angsd_structure/sfs/LS.sfs", "output/06_angsd_structure/sfs/LS.thetas.idx.pestPG", "output/06_angsd_structure/sfs/MB.sfs", "output/06_angsd_structure/sfs/MB.thetas.idx.pestPG", "output/06_angsd_structure/sfs/NS18_Disco_Wild.sfs", "output/06_angsd_structure/sfs/NS18_Disco_Wild.thetas.idx.pestPG", "output/06_angsd_structure/sfs/NS18_Sequim_Wild.sfs", "output/06_angsd_structure/sfs/NS18_Sequim_Wild.thetas.idx.pestPG", "output/06_angsd_structure/sfs/Ostrich_Bay.sfs", "output/06_angsd_structure/sfs/Ostrich_Bay.thetas.idx.pestPG", "output/06_angsd_structure/sfs/PGB18_Wild.sfs", "output/06_angsd_structure/sfs/PGB18_Wild.thetas.idx.pestPG", "output/06_angsd_structure/sfs/SS18_North_Bay_Wild.sfs", "output/06_angsd_structure/sfs/SS18_North_Bay_Wild.thetas.idx.pestPG", "output/06_angsd_structure/sfs/Squaxin_Island.sfs", "output/06_angsd_structure/sfs/Squaxin_Island.thetas.idx.pestPG", "output/06_angsd_structure/sfs/WB.sfs", "output/06_angsd_structure/sfs/WB.thetas.idx.pestPG"]
+  }
+}

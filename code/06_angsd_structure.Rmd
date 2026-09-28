@@ -316,16 +316,27 @@ One array task per population pair (105): folded 2D SFS from the two SAF files,
 then `realSFS fst index` and `fst stats`, which report the unweighted and
 weighted (ratio-of-sums) global Fst. Waits for the SAF array.
 
+The 2D SFS is estimated from chromosome 1 only (`-r`, about 75 million sites
+with data, 12 percent of the genome) with the EM capped at 60 iterations. It
+serves only as the prior for `fst index`; the per-site Fst components and the
+global estimates in `fst stats` still use every site on all 10 chromosomes.
+Two earlier designs failed: the genome-wide 2D EM needs about 140 bytes per
+site in memory, 90 GB per pair, and was OOM-killed at 16 GB; estimating it in
+100 million-site blocks fit in memory but ran at about one EM iteration per
+minute per block, roughly 12 hours per pair.
+
 ```{bash fst}
 set -euo pipefail
 repo=$(cd .. && pwd)
 out=output/06_angsd_structure
 env=/mmfs1/gscratch/srlab/sr320/miniforge3/envs/angsd/bin
-threads=4
-max_concurrent=30
+threads=16
+max_concurrent=24
+sfs_maxiter=60          # EM iterations for the 2D SFS prior
 
 cd "${repo}"
 npair=$(wc -l < ${out}/samples/pairs.tsv)
+sfs_region=$(head -1 ${out}/samples/chromosomes.txt)   # chromosome used for the 2D SFS prior
 dep=""
 if [[ -s ${out}/tmp/saf.jobid ]] && [[ -n "$(squeue -h -j "$(cat ${out}/tmp/saf.jobid)" 2>/dev/null)" ]]; then
   dep="--dependency=afterok:$(cat ${out}/tmp/saf.jobid)"; echo "will wait for ${dep#*:}"
@@ -338,7 +349,7 @@ cat > ${out}/tmp/fst.sh <<EOF
 #SBATCH --partition=cpu-g2
 #SBATCH --array=0-$((npair - 1))%${max_concurrent}
 #SBATCH --cpus-per-task=${threads}
-#SBATCH --mem=16G
+#SBATCH --mem=32G
 #SBATCH --time=6:00:00
 #SBATCH --output=${repo}/${out}/logs/fst_%A_%a.out
 #SBATCH --chdir=${repo}
@@ -348,7 +359,7 @@ IFS=\$'\t' read -r p1 p2 < <(sed -n "\$((SLURM_ARRAY_TASK_ID + 1))p" ${out}/samp
 pair=\${p1}__\${p2}
 echo "start \$(date -u +%FT%TZ) host \$(hostname) pair=\${pair}"
 if [[ -s ${out}/fst/\${pair}.fst.txt ]]; then echo "\${pair}: done, skipping"; exit 0; fi
-realSFS ${out}/saf/\${p1}.saf.idx ${out}/saf/\${p2}.saf.idx -fold 1 -P ${threads} > ${out}/fst/\${pair}.ml
+realSFS ${out}/saf/\${p1}.saf.idx ${out}/saf/\${p2}.saf.idx -fold 1 -r ${sfs_region} -maxiter ${sfs_maxiter} -P ${threads} > ${out}/fst/\${pair}.ml
 realSFS fst index ${out}/saf/\${p1}.saf.idx ${out}/saf/\${p2}.saf.idx -sfs ${out}/fst/\${pair}.ml -fold 1 -fstout ${out}/fst/\${pair} -P ${threads}
 stats=\$(realSFS fst stats ${out}/fst/\${pair}.fst.idx 2>/dev/null | tail -1)
 printf "%s\t%s\t%s\n" "\${p1}" "\${p2}" "\${stats}" > ${out}/fst/\${pair}.fst.txt
@@ -364,7 +375,7 @@ echo "submitted Fst array ${jid} (${npair} pairs, ${max_concurrent} at a time)"
 # Status
 
 ```{bash status}
-set -uo pipefail
+set -u
 out=../output/06_angsd_structure
 for name in angsd-gl pcangsd saf fst; do
   f=${out}/tmp/${name}.jobid; [[ -s "$f" ]] || continue
@@ -493,9 +504,15 @@ div
 ```{bash sacct}
 set -uo pipefail
 out=../output/06_angsd_structure
-for name in angsd-gl pcangsd saf fst; do
-  f=${out}/tmp/${name}.jobid; [[ -s "$f" ]] || continue
-  sacct -j "$(cat "$f")" -P -X --format=JobID,State,Elapsed,MaxRSS --noheader >> ${out}/logs/sacct_${name}.tsv.tmp 2>/dev/null
+# *.jobid holds the latest submission of a chunk; *.jobids holds extra jobs run by hand
+# (for example admixture K values re-run as separate jobs after a timeout)
+for f in ${out}/tmp/*.jobid ${out}/tmp/*.jobids; do
+  [[ -s "$f" ]] || continue
+  name=$(basename "$f" | sed 's/\.jobids\?$//')
+  : > ${out}/logs/sacct_${name}.tsv.tmp
+  for id in $(cat "$f"); do
+    sacct -j "$id" -P -X --format=JobID,State,Elapsed,MaxRSS --noheader >> ${out}/logs/sacct_${name}.tsv.tmp 2>/dev/null
+  done
   sort -u ${out}/logs/sacct_${name}.tsv.tmp > ${out}/logs/sacct_${name}.tsv; rm -f ${out}/logs/sacct_${name}.tsv.tmp
   echo "${name}: $(cut -d'|' -f2 ${out}/logs/sacct_${name}.tsv | sort | uniq -c | tr '\n' ' ')"
 done
@@ -505,6 +522,7 @@ done
 out <- "../output/06_angsd_structure"
 repo_rel <- function(p) sub("^\\.\\./", "", p)
 to_sec <- function(x) {
+  if (length(x) == 0) return(numeric(0))
   d <- ifelse(grepl("-", x), suppressWarnings(as.numeric(sub("-.*", "", x))), 0)
   p <- lapply(strsplit(sub(".*-", "", x), ":"), as.numeric)
   d * 86400 + sapply(p, function(v) sum(v * 60^(rev(seq_along(v)) - 1)))

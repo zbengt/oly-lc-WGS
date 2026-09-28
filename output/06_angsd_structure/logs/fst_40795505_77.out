@@ -1,0 +1,108 @@
+start 2026-09-28T08:14:17Z host n3447 pair=MB__NS18_Disco_Wild
+[persaf::persaf_init] Version of output/06_angsd_structure/saf/MB.saf.idx is 3
+[persaf::persaf_init] Assuming .saf.gz file is output/06_angsd_structure/saf/MB.saf.gz
+[persaf::persaf_init] Assuming .saf.pos.gz file is output/06_angsd_structure/saf/MB.saf.pos.gz
+[persaf::persaf_init] Version of output/06_angsd_structure/saf/NS18_Disco_Wild.saf.idx is 3
+[persaf::persaf_init] Assuming .saf.gz file is output/06_angsd_structure/saf/NS18_Disco_Wild.saf.gz
+[persaf::persaf_init] Assuming .saf.pos.gz file is output/06_angsd_structure/saf/NS18_Disco_Wild.saf.pos.gz
+	-> args: tole:0.000000 nthreads:16 maxiter:60 nsites(block):0 start:(null) chr:CM196826.1 start:-1 stop:-1 fstout:(null) oldout:0 seed:-1 bootstrap:0 resample_chr:0 whichFst:0 fold:1 ref:(null) anc:(null)
+[main] Multi SFS is 'still' under development. Please report strange behaviour.
+	-> The choice of -nSites will require atleast: 7772.998535 megabyte memory, that is at least: 0.50% of total memory
+	-> dim(output/06_angsd_structure/saf/MB.saf.idx):17
+	-> dim(output/06_angsd_structure/saf/NS18_Disco_Wild.saf.idx):17
+	-> Dimension of parameter space: 289
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196826.1] from pop0:	80117822
+	-> Sites to keep[CM196826.1] from pop1:	80117822
+	-> Will run optimization on nSites: 80117822
+------------
+startlik=-380320542.910763
+	-> Instability detected, accelerated guess is too close to bound or outside will fallback to regular EM for this step
+likelihood: -10518282.856368
+------------
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> NB output is no longer log probs of the frequency spectrum!
+	-> Output is now simply the expected values! 
+	-> You can convert to the old format simply with log(norm(x))
+	-> Please check that it has converged!
+	-> You can add start new optimization by supplying -sfs FILE, where is >FILE from this run
+	-> -maxIter INT -tole FLOAT
+[persaf::persaf_init] Version of output/06_angsd_structure/saf/MB.saf.idx is 3
+[persaf::persaf_init] Assuming .saf.gz file is output/06_angsd_structure/saf/MB.saf.gz
+[persaf::persaf_init] Assuming .saf.pos.gz file is output/06_angsd_structure/saf/MB.saf.pos.gz
+[persaf::persaf_init] Version of output/06_angsd_structure/saf/NS18_Disco_Wild.saf.idx is 3
+[persaf::persaf_init] Assuming .saf.gz file is output/06_angsd_structure/saf/NS18_Disco_Wild.saf.gz
+[persaf::persaf_init] Assuming .saf.pos.gz file is output/06_angsd_structure/saf/NS18_Disco_Wild.saf.pos.gz
+	-> args: tole:0.000000 nthreads:16 maxiter:100 nsites(block):0 start:output/06_angsd_structure/fst/MB__NS18_Disco_Wild.ml chr:(null) start:-1 stop:-1 fstout:output/06_angsd_structure/fst/MB__NS18_Disco_Wild oldout:0 seed:-1 bootstrap:0 resample_chr:0 whichFst:0 fold:1 ref:(null) anc:(null)
+	-> nSites: 100000
+	-> IMPORTANT: please make sure that your saf files haven't been folded with -fold 1 in -doSaf in angsd
+	-> [reynoldFst] sfs1:16 sfs2:16 dimspace:289 
+	-> generating offset remapper lookup
+	-> Reading: output/06_angsd_structure/fst/MB__NS18_Disco_Wild.ml assuming counts (will normalize to probs internally)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196826.1] from pop0:	80117822
+	-> Sites to keep[CM196826.1] from pop1:	80117822
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196827.1] from pop0:	79501309
+	-> Sites to keep[CM196827.1] from pop1:	79501309
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196828.1] from pop0:	78668437
+	-> Sites to keep[CM196828.1] from pop1:	78668437
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196829.1] from pop0:	68960134
+	-> Sites to keep[CM196829.1] from pop1:	68960134
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196830.1] from pop0:	68592997
+	-> Sites to keep[CM196830.1] from pop1:	68592997
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196831.1] from pop0:	41716152
+	-> Sites to keep[CM196831.1] from pop1:	41716152
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196832.1] from pop0:	54656580
+	-> Sites to keep[CM196832.1] from pop1:	54656580
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196833.1] from pop0:	45139348
+	-> Sites to keep[CM196833.1] from pop1:	45139348
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196834.1] from pop0:	31738506
+	-> Sites to keep[CM196834.1] from pop1:	31738506
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196835.1] from pop0:	29027645
+	-> Sites to keep[CM196835.1] from pop1:	29027645
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> fst index finished with no errors!
+		 Example runs:
+	 realSFS fst stats  output/06_angsd_structure/fst/MB__NS18_Disco_Wild.fst.idx 
+	 realSFS fst stats2 output/06_angsd_structure/fst/MB__NS18_Disco_Wild.fst.idx 
+end 2026-09-28T09:43:06Z pair=MB__NS18_Disco_Wild fst=0.033931	0.041785
