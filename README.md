@@ -171,6 +171,41 @@ actually assembled, while the share of reads at MAPQ 30 or higher is unchanged
 
 ![Depth on v081 versus xbOstLuri2 and mapping rate by location](output/05_realign_xbOstLuri2/figures/depth_v081_vs_xbOstLuri2.png)
 
+### Step 06 genotype-likelihood population structure (2026-09-28)
+
+`code/06_angsd_structure.Rmd` analysed the 109 usable step 05 BAMs (blanks and
+the 0.78x sample `HC18_Triton_Wild_10` excluded) with ANGSD and PCAngsd over the
+10 chromosomes: 7,418,858 SNP sites for the PCA and admixture, and folded site
+frequency spectra over about 620 million sites per population for diversity and
+Fst. Tables and figures are in
+[`output/06_angsd_structure/`](output/06_angsd_structure/).
+
+Main findings:
+
+- **WB is Coos Bay stock.** The eight WB samples sit inside the Coos Bay cluster
+  on PC1 (5.4% of variance), share one ancestry component with Coos Bay at every
+  K, and have a weighted Fst of 0.037 to Coos Bay, the same as neighbouring sites
+  within Puget Sound, against 0.11 to 0.14 to every Puget Sound site. Whatever
+  the WB prefix denotes, these are not a San Juan Island wild population.
+- **Three Puget Sound groups**: South and Central Sound (LS, Squaxin Island,
+  North Bay, Dogfish Bay, Ostrich Bay, CS18), Hood Canal (Triton Cove, Port
+  Gamble) and a north Olympic Peninsula group (Sequim, Discovery Bay), with the
+  Fidalgo Bay sets intermediate and carrying a small Coos Bay-like component.
+  Weighted Fst within groups is 0.034 to 0.038 and between groups 0.04 to 0.09.
+- **MB groups with Hood Canal**, not the South Sound (Fst 0.035 to Sequim and
+  0.036 to Port Gamble, against 0.06 to 0.07 to the South Sound sites), so the
+  "Mud Bay, Eld Inlet" reading of that prefix and its step 04 station match
+  should be revisited.
+- Nucleotide diversity is 0.0034 to 0.0040 per site. Tajima's D splits by
+  sample-set naming (2018 wild sets near zero or negative, other sets 0.35 to
+  0.49), which follows the duplicate-rate split seen in step 05 and may be a
+  library-batch effect on the rare-variant tail rather than biology; the PCA
+  shows no batch axis.
+
+![PCAngsd PCA of 109 samples](output/06_angsd_structure/figures/pca.png)
+
+![Weighted pairwise Fst](output/06_angsd_structure/figures/fst_heatmap.png)
+
 ### Current status of later-stage summaries
 
 The variant-summary script is present in `code/03_variant_summary.py`, but the

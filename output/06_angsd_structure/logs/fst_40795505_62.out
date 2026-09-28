@@ -1,0 +1,108 @@
+start 2026-09-28T07:35:18Z host n3434 pair=HC18_Triton_Wild__NS18_Disco_Wild
+[persaf::persaf_init] Version of output/06_angsd_structure/saf/HC18_Triton_Wild.saf.idx is 3
+[persaf::persaf_init] Assuming .saf.gz file is output/06_angsd_structure/saf/HC18_Triton_Wild.saf.gz
+[persaf::persaf_init] Assuming .saf.pos.gz file is output/06_angsd_structure/saf/HC18_Triton_Wild.saf.pos.gz
+[persaf::persaf_init] Version of output/06_angsd_structure/saf/NS18_Disco_Wild.saf.idx is 3
+[persaf::persaf_init] Assuming .saf.gz file is output/06_angsd_structure/saf/NS18_Disco_Wild.saf.gz
+[persaf::persaf_init] Assuming .saf.pos.gz file is output/06_angsd_structure/saf/NS18_Disco_Wild.saf.pos.gz
+	-> args: tole:0.000000 nthreads:16 maxiter:60 nsites(block):0 start:(null) chr:CM196826.1 start:-1 stop:-1 fstout:(null) oldout:0 seed:-1 bootstrap:0 resample_chr:0 whichFst:0 fold:1 ref:(null) anc:(null)
+[main] Multi SFS is 'still' under development. Please report strange behaviour.
+	-> The choice of -nSites will require atleast: 7819.139648 megabyte memory, that is at least: 0.51% of total memory
+	-> dim(output/06_angsd_structure/saf/HC18_Triton_Wild.saf.idx):15
+	-> dim(output/06_angsd_structure/saf/NS18_Disco_Wild.saf.idx):17
+	-> Dimension of parameter space: 255
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196826.1] from pop0:	78065515
+	-> Sites to keep[CM196826.1] from pop1:	78065515
+	-> Will run optimization on nSites: 78065515
+------------
+startlik=-353460784.232071
+	-> Instability detected, accelerated guess is too close to bound or outside will fallback to regular EM for this step
+likelihood: -12200750.478408
+------------
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> NB output is no longer log probs of the frequency spectrum!
+	-> Output is now simply the expected values! 
+	-> You can convert to the old format simply with log(norm(x))
+	-> Please check that it has converged!
+	-> You can add start new optimization by supplying -sfs FILE, where is >FILE from this run
+	-> -maxIter INT -tole FLOAT
+[persaf::persaf_init] Version of output/06_angsd_structure/saf/HC18_Triton_Wild.saf.idx is 3
+[persaf::persaf_init] Assuming .saf.gz file is output/06_angsd_structure/saf/HC18_Triton_Wild.saf.gz
+[persaf::persaf_init] Assuming .saf.pos.gz file is output/06_angsd_structure/saf/HC18_Triton_Wild.saf.pos.gz
+[persaf::persaf_init] Version of output/06_angsd_structure/saf/NS18_Disco_Wild.saf.idx is 3
+[persaf::persaf_init] Assuming .saf.gz file is output/06_angsd_structure/saf/NS18_Disco_Wild.saf.gz
+[persaf::persaf_init] Assuming .saf.pos.gz file is output/06_angsd_structure/saf/NS18_Disco_Wild.saf.pos.gz
+	-> args: tole:0.000000 nthreads:16 maxiter:100 nsites(block):0 start:output/06_angsd_structure/fst/HC18_Triton_Wild__NS18_Disco_Wild.ml chr:(null) start:-1 stop:-1 fstout:output/06_angsd_structure/fst/HC18_Triton_Wild__NS18_Disco_Wild oldout:0 seed:-1 bootstrap:0 resample_chr:0 whichFst:0 fold:1 ref:(null) anc:(null)
+	-> nSites: 100000
+	-> IMPORTANT: please make sure that your saf files haven't been folded with -fold 1 in -doSaf in angsd
+	-> [reynoldFst] sfs1:14 sfs2:16 dimspace:255 
+	-> generating offset remapper lookup
+	-> Reading: output/06_angsd_structure/fst/HC18_Triton_Wild__NS18_Disco_Wild.ml assuming counts (will normalize to probs internally)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196826.1] from pop0:	78065515
+	-> Sites to keep[CM196826.1] from pop1:	78065515
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196827.1] from pop0:	77463195
+	-> Sites to keep[CM196827.1] from pop1:	77463195
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196828.1] from pop0:	77211624
+	-> Sites to keep[CM196828.1] from pop1:	77211624
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196829.1] from pop0:	67526775
+	-> Sites to keep[CM196829.1] from pop1:	67526775
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196830.1] from pop0:	66579962
+	-> Sites to keep[CM196830.1] from pop1:	66579962
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196831.1] from pop0:	39888802
+	-> Sites to keep[CM196831.1] from pop1:	39888802
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196832.1] from pop0:	53179747
+	-> Sites to keep[CM196832.1] from pop1:	53179747
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196833.1] from pop0:	43700002
+	-> Sites to keep[CM196833.1] from pop1:	43700002
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196834.1] from pop0:	31278628
+	-> Sites to keep[CM196834.1] from pop1:	31278628
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Sites to keep[CM196835.1] from pop0:	27694450
+	-> Sites to keep[CM196835.1] from pop1:	27694450
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> fst index finished with no errors!
+		 Example runs:
+	 realSFS fst stats  output/06_angsd_structure/fst/HC18_Triton_Wild__NS18_Disco_Wild.fst.idx 
+	 realSFS fst stats2 output/06_angsd_structure/fst/HC18_Triton_Wild__NS18_Disco_Wild.fst.idx 
+end 2026-09-28T08:59:44Z pair=HC18_Triton_Wild__NS18_Disco_Wild fst=0.041179	0.052025
