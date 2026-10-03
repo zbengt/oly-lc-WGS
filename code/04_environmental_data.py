@@ -45,69 +45,68 @@ COOPS_DATA = "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter"
 
 USER_AGENT = "oly-lc-WGS environmental data assembly (github.com/zbengt/oly-lc-WGS)"
 
-# Approximate coordinates for the putative sites named in README.md. Sites
-# flagged ``uncertain`` there carry the same flag here: the coordinate is a
-# best-guess centroid for the interpreted site, not a recorded collection point.
+# Approximate coordinates for the sites named in README.md: each is a centroid
+# for the site, not a recorded collection point.
 SITES = {
     "CS18_22_Wild_plate1": {
         "putative_site": "Central Sound wild collection, 2018 (Clam Bay / Manchester vicinity)",
-        "lat": 47.5760, "lon": -122.5460, "region": "Central Puget Sound", "certain": False,
+        "lat": 47.5760, "lon": -122.5460, "region": "Central Puget Sound",
     },
     "Coos_Bay": {
         "putative_site": "Coos Bay, Oregon",
-        "lat": 43.3450, "lon": -124.3170, "region": "Oregon coast", "certain": True,
+        "lat": 43.3450, "lon": -124.3170, "region": "Oregon coast",
     },
     "Dogfish_Bay": {
         "putative_site": "Dogfish Bay, Liberty Bay vicinity, Kitsap Peninsula",
-        "lat": 47.6960, "lon": -122.6300, "region": "Central Puget Sound", "certain": True,
+        "lat": 47.6960, "lon": -122.6300, "region": "Central Puget Sound",
     },
     "FB18_Wild": {
         "putative_site": "Fidalgo Bay wild collection, 2018, Anacortes",
-        "lat": 48.4880, "lon": -122.5760, "region": "Northern Puget Sound", "certain": True,
+        "lat": 48.4880, "lon": -122.5760, "region": "Northern Puget Sound",
     },
     "Fidalgo_Bay": {
         "putative_site": "Fidalgo Bay, Anacortes",
-        "lat": 48.4880, "lon": -122.5760, "region": "Northern Puget Sound", "certain": True,
+        "lat": 48.4880, "lon": -122.5760, "region": "Northern Puget Sound",
     },
     "HC18_Triton_Wild": {
         "putative_site": "Triton Cove, Hood Canal",
-        "lat": 47.6070, "lon": -122.9770, "region": "Hood Canal", "certain": True,
+        "lat": 47.6070, "lon": -122.9770, "region": "Hood Canal",
     },
     "LS": {
         "putative_site": "Little Skookum Inlet, southern Puget Sound",
-        "lat": 47.1600, "lon": -123.0300, "region": "South Puget Sound", "certain": False,
+        "lat": 47.1600, "lon": -123.0300, "region": "South Puget Sound",
     },
     "MB": {
         "putative_site": "Mud Bay, Eld Inlet, southern Puget Sound",
-        "lat": 47.1080, "lon": -122.9770, "region": "South Puget Sound", "certain": False,
+        "lat": 47.1080, "lon": -122.9770, "region": "South Puget Sound",
     },
     "NS18_Disco_Wild": {
         "putative_site": "Discovery Bay, north Olympic Peninsula",
-        "lat": 48.0450, "lon": -122.8880, "region": "Strait of Juan de Fuca", "certain": True,
+        "lat": 48.0450, "lon": -122.8880, "region": "Strait of Juan de Fuca",
     },
     "NS18_Sequim_Wild": {
         "putative_site": "Sequim Bay, north Olympic Peninsula",
-        "lat": 48.0640, "lon": -123.0300, "region": "Strait of Juan de Fuca", "certain": True,
+        "lat": 48.0640, "lon": -123.0300, "region": "Strait of Juan de Fuca",
     },
     "Ostrich_Bay": {
         "putative_site": "Ostrich Bay, Dyes Inlet, Bremerton",
-        "lat": 47.5860, "lon": -122.6900, "region": "Central Puget Sound", "certain": True,
+        "lat": 47.5860, "lon": -122.6900, "region": "Central Puget Sound",
     },
     "PGB18_Wild": {
         "putative_site": "Port Gamble Bay, northern Hood Canal",
-        "lat": 47.8500, "lon": -122.5800, "region": "Hood Canal", "certain": True,
+        "lat": 47.8500, "lon": -122.5800, "region": "Hood Canal",
     },
     "SS18_North_Bay_Wild": {
         "putative_site": "North Bay, Case Inlet, southern Puget Sound",
-        "lat": 47.3800, "lon": -122.8300, "region": "South Puget Sound", "certain": True,
+        "lat": 47.3800, "lon": -122.8300, "region": "South Puget Sound",
     },
     "Squaxin_Island": {
         "putative_site": "Squaxin Island, southern Puget Sound",
-        "lat": 47.1800, "lon": -122.9200, "region": "South Puget Sound", "certain": True,
+        "lat": 47.1800, "lon": -122.9200, "region": "South Puget Sound",
     },
     "WB": {
-        "putative_site": "Westcott Bay, San Juan Island",
-        "lat": 48.5850, "lon": -123.1600, "region": "San Juan Islands", "certain": False,
+        "putative_site": "Stony Point, Willapa Bay, Washington coast",
+        "lat": 46.5200, "lon": -123.9800, "region": "Washington coast",
     },
 }
 
@@ -347,7 +346,6 @@ def main() -> int:
             "region": site["region"],
             "latitude": site["lat"],
             "longitude": site["lon"],
-            "coordinate_confidence": "high" if site["certain"] else "uncertain",
             "n_samples": counts[location],
         })
 
@@ -462,10 +460,8 @@ def main() -> int:
                 "pandas": pd.__version__,
             },
             "notes": (
-                "Site coordinates are approximate centroids for the putative sites named in "
-                "README.md, not recorded collection points. Sites marked 'uncertain' have "
-                "ambiguous name prefixes and their station matches should be re-checked once "
-                "the original collection records are available."
+                "Site coordinates are approximate centroids for the sites named in "
+                "README.md, not recorded collection points."
             ),
         }, handle, indent=2)
 

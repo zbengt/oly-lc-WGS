@@ -50,9 +50,8 @@ naming convention matters:
 The current dataset holds 112 samples across 16 inferred locations (15 sites
 plus blanks). The derived sample sheet is written to
 `output/01_align_and_visualize/metrics/sample_metadata.tsv` and reused by every
-later step. Putative site names and their confidence are documented in the
-root `README.md`; `LS`, `MB`, `WB`, and `CS18_22_Wild_plate1` are not yet
-confirmed against collection records.
+later step. Site names for each location are documented in the
+root `README.md`.
 
 ## Reference indices
 

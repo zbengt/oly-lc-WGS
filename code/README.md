@@ -137,7 +137,7 @@ Environmental context for each putative sampling site from nearby buoys and shor
   - `output/04_environmental_data/environmental-summary.tsv` per-site, per-variable n/mean/min/max
   - `output/04_environmental_data/metadata.json` parameters, sources, runtime, software versions
 - **Notes**
-  - Site coordinates are approximate centroids for interpreted sites, not recorded collection points; ambiguous locations (`CS18_22_Wild_plate1`, `LS`, `MB`, `WB`) are flagged `uncertain`.
+  - Site coordinates are approximate centroids for each site, not recorded collection points.
   - A station may advertise water temperature but return nothing for the window, so the script walks outwards until one delivers data.
   - NANOOS/UW ORCA moorings are listed as pointers only; their data are openly served from the NANOOS ERDDAP and ingesting them is planned separately (see `docs/environmental-data-access-plan.md`).
 

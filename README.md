@@ -75,26 +75,25 @@ BAM-summary stages.
 | Location | Putative site (complete words) | Samples |
 | --- | --- | ---: |
 | Blank | Negative control (no oyster tissue) | 2 |
-| CS18_22_Wild_plate1 | Central Sound wild collection, 2018 (Clam Bay / Manchester vicinity) — uncertain | 7 |
+| CS18_22_Wild_plate1 | Central Sound wild collection, 2018 (Clam Bay / Manchester vicinity) | 7 |
 | Coos_Bay | Coos Bay, Oregon (outside Puget Sound) | 7 |
 | Dogfish_Bay | Dogfish Bay, Liberty Bay vicinity, Kitsap Peninsula, Puget Sound | 8 |
 | FB18_Wild | Fidalgo Bay wild collection, 2018, Anacortes, northern Puget Sound | 5 |
 | Fidalgo_Bay | Fidalgo Bay, Anacortes, northern Puget Sound | 5 |
 | HC18_Triton_Wild | Triton Cove, Hood Canal, 2018 wild collection | 8 |
-| LS | Little Skookum Inlet, southern Puget Sound — uncertain | 7 |
-| MB | Mud Bay, Eld Inlet, southern Puget Sound — uncertain | 8 |
+| LS | Little Skookum Inlet, southern Puget Sound | 7 |
+| MB | Mud Bay, Eld Inlet, southern Puget Sound | 8 |
 | NS18_Disco_Wild | Discovery Bay, north Olympic Peninsula, 2018 wild collection | 8 |
 | NS18_Sequim_Wild | Sequim Bay, north Olympic Peninsula, 2018 wild collection | 8 |
 | Ostrich_Bay | Ostrich Bay, Dyes Inlet, Bremerton, central Puget Sound | 8 |
 | PGB18_Wild | Port Gamble Bay, 2018 wild collection, northern Hood Canal | 8 |
 | SS18_North_Bay_Wild | North Bay, Case Inlet, southern Puget Sound, 2018 wild collection | 8 |
 | Squaxin_Island | Squaxin Island, southern Puget Sound | 7 |
-| WB | Westcott Bay, San Juan Island — uncertain | 8 |
+| WB | Stony Point, Willapa Bay, Washington coast (outside Puget Sound) | 8 |
 
-Site names in the second column are inferred from the sample-name prefixes, not
-from a curated collection sheet. Rows flagged *uncertain* have prefixes that do
-not map unambiguously to a single site and should be confirmed against the
-original collection records before use.
+The second column gives the collection site for each sample-name prefix. The
+coordinates used for these sites in steps 04 and 05 are approximate centroids,
+not recorded collection points.
 
 ### Summary metrics from committed outputs
 
@@ -182,20 +181,21 @@ Fst. Tables and figures are in
 
 Main findings:
 
-- **WB is Coos Bay stock.** The eight WB samples sit inside the Coos Bay cluster
-  on PC1 (5.4% of variance), share one ancestry component with Coos Bay at every
-  K, and have a weighted Fst of 0.037 to Coos Bay, the same as neighbouring sites
-  within Puget Sound, against 0.11 to 0.14 to every Puget Sound site. Whatever
-  the WB prefix denotes, these are not a San Juan Island wild population.
+- **The outer-coast sites form one group.** The eight WB (Willapa Bay, Stony
+  Point) samples sit inside the Coos Bay cluster on PC1 (5.4% of variance),
+  share one ancestry component with Coos Bay at every K, and have a weighted Fst
+  of 0.037 to Coos Bay, the same as neighbouring sites within Puget Sound,
+  against 0.11 to 0.14 to every Puget Sound site. Willapa Bay and Coos Bay are
+  both outer Pacific coast estuaries, so the main split is outer coast versus
+  Puget Sound.
 - **Three Puget Sound groups**: South and Central Sound (LS, Squaxin Island,
   North Bay, Dogfish Bay, Ostrich Bay, CS18), Hood Canal (Triton Cove, Port
   Gamble) and a north Olympic Peninsula group (Sequim, Discovery Bay), with the
   Fidalgo Bay sets intermediate and carrying a small Coos Bay-like component.
   Weighted Fst within groups is 0.034 to 0.038 and between groups 0.04 to 0.09.
 - **MB groups with Hood Canal**, not the South Sound (Fst 0.035 to Sequim and
-  0.036 to Port Gamble, against 0.06 to 0.07 to the South Sound sites), so the
-  "Mud Bay, Eld Inlet" reading of that prefix and its step 04 station match
-  should be revisited.
+  0.036 to Port Gamble, against 0.06 to 0.07 to the South Sound sites), despite
+  Mud Bay's location in Eld Inlet.
 - Nucleotide diversity is 0.0034 to 0.0040 per site. Tajima's D splits by
   sample-set naming (2018 wild sets near zero or negative, other sets 0.35 to
   0.49), which follows the duplicate-rate split seen in step 05 and may be a

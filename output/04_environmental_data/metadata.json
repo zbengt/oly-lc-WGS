@@ -7,8 +7,8 @@
     "top_n": 5,
     "no_download": false,
     "observation_window_utc": [
-      "2026-08-05T20:44:01.302407+00:00",
-      "2026-09-04T20:44:01.302407+00:00"
+      "2026-09-03T11:04:43.443398+00:00",
+      "2026-10-03T11:04:43.443398+00:00"
     ]
   },
   "sources": {
@@ -21,13 +21,13 @@
   "counts": {
     "sites": 15,
     "station_matches": 200,
-    "observation_series": 43
+    "observation_series": 44
   },
-  "date": "2026-09-04T20:45:26.892643+00:00",
-  "runtime_seconds": 87.4,
+  "date": "2026-10-03T11:06:20.064598+00:00",
+  "runtime_seconds": 99.7,
   "software": {
-    "python": "3.9.6",
-    "pandas": "2.3.1"
+    "python": "3.8.5",
+    "pandas": "1.1.3"
   },
-  "notes": "Site coordinates are approximate centroids for the putative sites named in README.md, not recorded collection points. Sites marked 'uncertain' have ambiguous name prefixes and their station matches should be re-checked once the original collection records are available."
+  "notes": "Site coordinates are approximate centroids for the sites named in README.md, not recorded collection points."
 }

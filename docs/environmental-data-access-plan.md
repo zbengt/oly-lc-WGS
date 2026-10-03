@@ -86,8 +86,8 @@ lc-WGS population structure:
 5. **Anything closer.** Do NWEM or NANOOS partners hold non-ORCA data — pilot
    moorings, shore stations, tribal or shellfish-grower sensors served through
    NVS — inside Case Inlet, Totten/Little Skookum, Eld Inlet, Dyes Inlet,
-   Port Gamble Bay, Fidalgo Bay, or Westcott Bay? These are the sites where our
-   nearest reporting station is currently 30–57 km away.
+   Port Gamble Bay, or Fidalgo Bay? These are the sites where our nearest
+   reporting station is currently 30–57 km away.
 
 **Draft message** — review and send yourself; I have not sent anything.
 
@@ -119,8 +119,8 @@ lc-WGS population structure:
 >    from the winched CTD casts?
 > 5. Are there any other data you serve or know of — pilot moorings, shore
 >    stations, tribal or grower-operated sensors — inside Case Inlet, Totten or
->    Little Skookum Inlet, Eld Inlet, Dyes Inlet, Port Gamble Bay, Fidalgo Bay,
->    or Westcott Bay? Those are the sites where our nearest reporting station is
+>    Little Skookum Inlet, Eld Inlet, Dyes Inlet, Port Gamble Bay, or Fidalgo
+>    Bay? Those are the sites where our nearest reporting station is
 >    still 30+ km away.
 >
 > Happy to share what we build back, and we'll cite the NWEM/NANOOS data as
@@ -185,7 +185,7 @@ Missing values are `-99999.9`, not NaN — filter explicitly. Reading requires
 | `Dogfish_Bay` | Dogfish Bay | OCH014 | 3.7 | 47.2 |
 | `NS18_Sequim_Wild` | Sequim Bay | ADM002 | 19.6 | 20.7 |
 | `FB18_Wild` / `Fidalgo_Bay` | Fidalgo Bay | RSR837 | 19.8 | 44.0 |
-| `WB` | Westcott Bay | SJF000 | 21.2 | 55.2 |
+| `WB` | Stony Point, Willapa Bay | not yet computed | — | 20.8 |
 | `Coos_Bay` | Coos Bay, OR | — | 346 | 69.0 |
 
 Every Puget Sound site gains a closer in-water record, most of them
@@ -221,11 +221,8 @@ oxygen, chlorophyll, and nutrients rather than a single surface temperature.
    2018, so a climatology for the years preceding collection is available — this
    is more defensible than the current 30-day snapshot, which describes 2026
    conditions for animals sampled in 2018.
-3. **Resolve the four uncertain sites first.** `CS18_22_Wild_plate1`, `LS`,
-   `MB`, and `WB` drive station assignment. Confirming them against the original
-   collection records changes which Ecology station each one gets.
-4. **Send the NANOOS/NWEM message** once the contact is confirmed.
-5. **Find an Oregon source for Coos Bay.** Candidates to check, none verified
+3. **Send the NANOOS/NWEM message** once the contact is confirmed.
+4. **Find an Oregon source for Coos Bay.** Candidates to check, none verified
    yet: OSU's Charleston/OIMB shore station, the South Slough NERR system-wide
    monitoring program (NERR SWMP data are public and Coos Bay's South Slough is
    a NERR site — likely the best match), and Oregon DEQ ambient monitoring.

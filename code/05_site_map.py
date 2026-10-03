@@ -9,7 +9,7 @@ Steps:
 2. Downloads Natural Earth 10 m land polygons once and caches them in
    ``output/05_site_map/cache/``.
 3. Draws a regional overview (Puget Sound to Coos Bay) and a Puget Sound
-   detail panel. Sites flagged uncertain are drawn as open markers.
+   detail panel.
 
 Outputs: ``output/05_site_map/figures/site_map.png`` (+ ``.pdf``),
 ``output/05_site_map/tables/site_coordinates.tsv``.
@@ -39,21 +39,27 @@ LAND_URL = (
 )
 
 REGION_COLORS = {
-    "San Juan Islands": "#1f77b4",
     "Northern Puget Sound": "#17becf",
     "Strait of Juan de Fuca": "#9467bd",
     "Hood Canal": "#2ca02c",
     "Central Puget Sound": "#ff7f0e",
     "South Puget Sound": "#d62728",
+    "Washington coast": "#1f77b4",
     "Oregon coast": "#8c564b",
 }
 
 OVERVIEW_EXTENT = (-125.2, -121.8, 42.8, 49.1)
 DETAIL_EXTENT = (-123.45, -122.15, 46.95, 48.75)
 
+# Outer-coast sites fall outside the detail panel and are labelled on the
+# overview instead, with these offsets (points).
+OVERVIEW_LABELS = {
+    "WB": (-8, 0, "right"),
+    "Coos_Bay": (8, 0, "left"),
+}
+
 # Label offsets (points) for the detail panel, tuned to avoid overlaps.
 LABEL_OFFSETS = {
-    "WB": (-8, 6, "right"),
     "Fidalgo_Bay + FB18_Wild": (8, 4, "left"),
     "NS18_Sequim_Wild": (-8, 6, "right"),
     "NS18_Disco_Wild": (8, 6, "left"),
@@ -125,8 +131,7 @@ def plot_points(ax, table: pd.DataFrame, size_scale: float) -> None:
         color = REGION_COLORS.get(row["region"], "black")
         ax.scatter(
             row["lon"], row["lat"], s=size_scale * row["n_samples"],
-            facecolor=color if row["certain"] else "white",
-            edgecolor=color, linewidth=1.6, zorder=5,
+            facecolor=color, edgecolor=color, linewidth=1.6, zorder=5,
         )
 
 
@@ -140,7 +145,6 @@ def build_table(sites: dict, metadata: Path) -> pd.DataFrame:
             "region": info["region"],
             "lat": info["lat"],
             "lon": info["lon"],
-            "certain": info["certain"],
             "n_samples": int(counts.get(location, 0)),
         })
     return pd.DataFrame(rows)
@@ -155,7 +159,6 @@ def merge_colocated(table: pd.DataFrame) -> pd.DataFrame:
             "region": grp["region"].iloc[0],
             "lat": lat,
             "lon": lon,
-            "certain": bool(grp["certain"].all()),
             "n_samples": int(grp["n_samples"].sum()),
         })
     return pd.DataFrame(grouped)
@@ -191,9 +194,11 @@ def main() -> None:
     x0, x1, y0, y1 = DETAIL_EXTENT
     ax_over.add_patch(Rectangle((x0, y0), x1 - x0, y1 - y0, fill=False,
                                 edgecolor="black", linewidth=1, linestyle="--", zorder=6))
-    coos = points[points["label"] == "Coos_Bay"].iloc[0]
-    ax_over.annotate(f"Coos_Bay (n={coos['n_samples']})", (coos["lon"], coos["lat"]),
-                     xytext=(8, 0), textcoords="offset points", fontsize=8, va="center")
+    for label, (dx, dy, ha) in OVERVIEW_LABELS.items():
+        row = points[points["label"] == label].iloc[0]
+        ax_over.annotate(f"{label} (n={row['n_samples']})", (row["lon"], row["lat"]),
+                         xytext=(dx, dy), textcoords="offset points", fontsize=8,
+                         ha=ha, va="center")
     ax_over.text(-122.0, 44.2, "OREGON", fontsize=9, color="#777", ha="right")
     ax_over.text(-122.0, 46.6, "WASHINGTON", fontsize=9, color="#777", ha="right")
     ax_over.text(-124.9, 45.8, "Pacific\nOcean", fontsize=9, color="#5a7fa0",
@@ -205,27 +210,21 @@ def main() -> None:
     draw_base(ax_det, rings, DETAIL_EXTENT)
     plot_points(ax_det, points, size_scale=14)
     for _, row in points.iterrows():
-        if row["label"] == "Coos_Bay":
+        if row["label"] in OVERVIEW_LABELS:
             continue
         dx, dy, ha = LABEL_OFFSETS.get(row["label"], (8, 0, "left"))
-        suffix = "" if row["certain"] else " ?"
-        ax_det.annotate(f"{row['label']} (n={row['n_samples']}){suffix}",
+        ax_det.annotate(f"{row['label']} (n={row['n_samples']})",
                         (row["lon"], row["lat"]), xytext=(dx, dy),
                         textcoords="offset points", fontsize=7.5, ha=ha, va="center",
                         zorder=7)
     ax_det.set_title("B  Puget Sound and Salish Sea", loc="left",
                      fontsize=10, fontweight="bold")
 
-    # Legend: regions + certainty
+    # Legend: regions
     handles = [
         plt.Line2D([], [], marker="o", linestyle="", markersize=8,
                    markerfacecolor=c, markeredgecolor=c, label=r)
         for r, c in REGION_COLORS.items() if r in set(points["region"])
-    ]
-    handles += [
-        plt.Line2D([], [], marker="o", linestyle="", markersize=8,
-                   markerfacecolor="white", markeredgecolor="#444",
-                   label="Uncertain site (?)"),
     ]
     fig.legend(handles=handles, loc="center right", fontsize=8, frameon=False,
                title="Region", title_fontsize=9)
