@@ -1,0 +1,6 @@
+candidate_set	n_predictors	predictors	max_vif	mean_vif
+vif_survivors	3	sal_range;do_month_min;chl_summer_mean	1.748	1.529
+selected	3	temp_summer_mean;sal_range;chl_summer_mean	2.182	1.824
+salinity_anchored	3	sal_annual_mean;sal_range;chl_summer_mean	2.755	2.172
+thermal_hypoxia_chl	3	temp_summer_mean;do_month_min;chl_summer_mean	11.162	7.533
+thermal_salinity_chl_do	4	temp_summer_mean;sal_range;chl_summer_mean;do_month_min	18.085	9.159

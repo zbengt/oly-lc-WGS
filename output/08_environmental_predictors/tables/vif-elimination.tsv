@@ -1,0 +1,5 @@
+step	n_predictors	max_vif_predictor	max_vif	action	retained
+1	6	temp_summer_mean	75.099	drop	temp_summer_mean;temp_range;sal_annual_mean;sal_range;do_month_min;chl_summer_mean
+2	5	temp_range	22.48	drop	temp_range;sal_annual_mean;sal_range;do_month_min;chl_summer_mean
+3	4	sal_annual_mean	9.474	drop	sal_annual_mean;sal_range;do_month_min;chl_summer_mean
+4	3	do_month_min	1.748	stop	sal_range;do_month_min;chl_summer_mean
