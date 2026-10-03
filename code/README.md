@@ -207,3 +207,30 @@ analysis.
   - Genotype likelihoods use `-GL 1` with `-SNP_pval 1e-6` and minor allele frequency >= 0.05; SFS use all
     sites and are folded (the reference is not an ancestral sequence).
   - Only the 10 chromosomes (995 of 1,029 Mb) are analysed; unplaced scaffolds are skipped.
+
+## 07_orca_ecology_data.py
+
+Site-level marine climatologies from WA Dept. of Ecology monthly CTD profiles and
+the UW/NANOOS ORCA moorings, the environmental layer for genotype-environment
+analyses (replaces the step 04 30-day NOAA snapshot).
+
+- **Inputs**
+  - `output/04_environmental_data/site-coordinates.tsv` (site coordinates)
+  - Ecology yearly netCDFs from `fortress.wa.gov` (read with `h5py`; no auth)
+  - ORCA L3 gridded profiles from the NANOOS ERDDAP (`erddap.nanoos.org`, griddap)
+- **Execution**
+  - Run from the repository root:  
+    `python code/07_orca_ecology_data.py --start-year 2015 --end-year 2018`
+  - `--max-depth` (default 5 m), `--ecology-max-km` (25), `--min-profiles` (12),
+    `--orca-max-km` (30), `--skip-orca`, `--force` (re-download cached files)
+- **Outputs**
+  - `output/07_orca_ecology_data/tables/site_predictors_ecology.tsv` one row of predictors per site
+  - `tables/site_station_assignment.tsv`, `monthly_climatology.tsv`, `ecology_profiles.tsv`, `site_summary_orca.tsv`
+  - `figures/ecology_monthly_climatology.png`, `metadata.json`, `logs/pipeline.log`
+  - `raw/` cached downloads (gitignored, about 50 MB per Ecology year)
+- **Notes**
+  - Keeps Ecology QC code 2 (Pass) and ORCA QARTOD flag 1 (PASS) only.
+  - `STATION_OVERRIDES` in the script maps a site to a station on its own water body when the
+    straight-line nearest station is across land (currently Dogfish Bay → SIN001).
+  - ORCA requests that fail with a server error stop further ORCA requests for that run and are
+    recorded in `metadata.json`; rerun later to fill them in. Coos Bay has no source in this step.

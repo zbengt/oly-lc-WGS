@@ -27,6 +27,7 @@ Additional details for each analysis step are documented in
 | 4 | `code/04_environmental_data.py` | Match each putative sampling site to nearby NOAA buoys/stations and download recent observations | `output/04_environmental_data/` |
 | 5 | `code/05_realign_xbOstLuri2.Rmd` | Re-align all samples to the chromosome-level NCBI reference GCA_061535525.1 (xbOstLuri2) with read groups and duplicate marking, via SLURM array jobs | `output/05_realign_xbOstLuri2/alignments/`, `metrics/`, `figures/` |
 | 6 | `code/06_angsd_structure.Rmd` | Genotype-likelihood population structure on the step 05 BAMs: ANGSD Beagle likelihoods, PCAngsd PCA and admixture, folded SFS diversity, and pairwise Fst for all 15 locations | `output/06_angsd_structure/tables/`, `figures/`, `pca/`, `sfs/`, `fst/` |
+| 7 | `code/07_orca_ecology_data.py` | Site-level 2015–2018 marine climatologies (0–5 m temperature, salinity, oxygen, chlorophyll) from WA Ecology CTD profiles and ORCA moorings, as predictors for genotype-environment analyses | `output/07_orca_ecology_data/tables/site_predictors_ecology.tsv`, `figures/` |
 
 ## Requirements
 
@@ -49,6 +50,7 @@ python code/03_variant_summary.py --threads 32
 python code/04_environmental_data.py --days 30 --radius-km 75
 Rscript -e 'rmarkdown::render("code/05_realign_xbOstLuri2.Rmd")'   # or run its chunks in RStudio
 Rscript -e 'rmarkdown::render("code/06_angsd_structure.Rmd")'      # submits SLURM jobs; rerun R chunks when done
+python code/07_orca_ecology_data.py --start-year 2015 --end-year 2018
 ```
 
 All outputs are written with relative paths so results remain reproducible across

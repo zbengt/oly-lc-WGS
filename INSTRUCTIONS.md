@@ -21,6 +21,7 @@ oly-lc-WGS/
 | `code/02_bam_summary.py` | `output/02_bam_summary/` | step 01 BAMs, sample sheet, reference `.fai` |
 | `code/03_variant_summary.py` | `output/03_variant_summary/` | step 01 filtered VCF, PLINK dataset, sample sheet |
 | `code/04_environmental_data.py` | `output/04_environmental_data/` | step 01 sample sheet; live NOAA endpoints |
+| `code/07_orca_ecology_data.py` | `output/07_orca_ecology_data/` | step 04 site coordinates; live Ecology and NANOOS ERDDAP endpoints; `h5py` |
 
 Steps 02, 03, and 04 are independent of one another and only need step 01's
 outputs. Step 04 needs network access and no bioinformatics tools.

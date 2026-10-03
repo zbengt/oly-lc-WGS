@@ -19,6 +19,7 @@ not be committed.
 | `02_bam_summary/` | `stats/samtools_stats/` (per-sample `samtools stats`), `tables/`, `positions/`, `figures/`, `logs/`, `metadata.json` | `tmp/` |
 | `03_variant_summary/` | Nothing yet. The script exists but has not completed a run against the joint VCF | |
 | `04_environmental_data/` | `site-coordinates.tsv`, `stations/`, `observations/`, `environmental-summary.tsv`, `metadata.json`, `README.md` | |
+| `07_orca_ecology_data/` | `tables/`, `figures/`, `logs/`, `metadata.json`, `README.md` | `raw/` (cached Ecology netCDFs and ERDDAP CSVs) |
 
 ## Reading the current results
 

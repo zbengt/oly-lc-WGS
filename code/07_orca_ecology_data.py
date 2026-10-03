@@ -90,6 +90,14 @@ ORCA_MOORINGS = [
     ("orca_hydro_carrinlet", "Carr Inlet, southern Puget Sound", 47.280, -122.730),
 ]
 
+# Sites whose nearest station by straight-line distance lies across land in a
+# different water body. Each maps to the station on the same passage system.
+STATION_OVERRIDES = {
+    # Liberty Bay drains to Port Orchard; HCB010 (14.6 km) is across the Kitsap
+    # Peninsula in Hood Canal. OCH014 in Liberty Bay was not sampled 2015-2018.
+    "Dogfish_Bay": "SIN001",
+}
+
 SUMMER_MONTHS = (7, 8, 9)
 WINTER_MONTHS = (12, 1, 2)
 
@@ -207,7 +215,7 @@ def ecology_profiles(years: list[int], max_depth: float, force: bool) -> tuple[p
 
 def assign_ecology_stations(sites: pd.DataFrame, profiles: pd.DataFrame,
                             max_km: float, min_profiles: int) -> pd.DataFrame:
-    """Nearest station within ``max_km`` that has at least ``min_profiles`` profiles."""
+    """Nearest station within ``max_km`` with at least ``min_profiles`` profiles, unless overridden."""
     stations = (profiles.groupby(["station", "station_lat", "station_lon"])
                 .agg(n_profiles=("profile", "nunique"),
                      first_date=("date", "min"), last_date=("date", "max"))
@@ -220,14 +228,19 @@ def assign_ecology_stations(sites: pd.DataFrame, profiles: pd.DataFrame,
         nearest = ranked.iloc[0]
         usable = ranked[(ranked["distance_km"] <= max_km) & (ranked["n_profiles"] >= min_profiles)]
         chosen = usable.iloc[0] if not usable.empty else None
+        method = "nearest"
+        override = STATION_OVERRIDES.get(site["location"])
+        if override is not None and override in set(ranked["station"]):
+            chosen = ranked[ranked["station"] == override].iloc[0]
+            method = "override"
         rows.append({
             "location": site["location"],
             "putative_site": site["putative_site"],
-            "coordinate_confidence": site["coordinate_confidence"],
             "nearest_station": nearest["station"],
             "nearest_distance_km": nearest["distance_km"],
             "nearest_n_profiles": int(nearest["n_profiles"]),
             "assigned_station": chosen["station"] if chosen is not None else "",
+            "assignment_method": method if chosen is not None else "none",
             "assigned_distance_km": chosen["distance_km"] if chosen is not None else np.nan,
             "assigned_n_profiles": int(chosen["n_profiles"]) if chosen is not None else 0,
             "assigned_first_date": chosen["first_date"].date().isoformat() if chosen is not None else "",
@@ -278,6 +291,9 @@ def orca_daily(dataset: str, years: list[int], max_depth: float, force: bool) ->
                 state = "no data in window" if "404" in message else "failed"
                 log.warning("  ORCA %s %s: %s", dataset, year, message.split(": ", 1)[-1])
                 status.append({"dataset": dataset, "year": year, "status": state, "url": url})
+                if state == "failed":
+                    # Server-side failure (e.g. 503): later years will fail the same way.
+                    break
                 continue
         frame = read_orca_csv(path)
         frames.append(frame)
@@ -351,18 +367,20 @@ def daily_extremes(daily: pd.DataFrame) -> dict:
 
 def plot_climatologies(clim: pd.DataFrame, path: Path) -> None:
     names = list(VARIABLES)
-    fig, axes = plt.subplots(2, 2, figsize=(12, 8), sharex=True)
+    fig, axes = plt.subplots(2, 2, figsize=(14, 8), sharex=True)
     eco = clim[clim["source"] == "Ecology"]
-    locations = sorted(eco["location"].unique())
+    # Several sites share a station; draw each station once, labelled with its sites.
+    served = eco.groupby("station")["location"].unique()
     cmap = plt.get_cmap("tab20")
     for ax, name in zip(axes.flat, names):
         sub = eco[eco["variable"] == name]
-        for i, location in enumerate(locations):
-            line = sub[sub["location"] == location].sort_values("month")
+        for i, (station, locations) in enumerate(served.items()):
+            line = (sub[(sub["station"] == station) & (sub["location"] == locations[0])]
+                    .sort_values("month"))
             if line.empty:
                 continue
-            ax.plot(line["month"], line["mean"], marker="o", ms=3, lw=1.2,
-                    color=cmap(i % 20), label=location)
+            ax.plot(line["month"], line["mean"], marker="o", ms=3, lw=1.2, color=cmap(i % 20),
+                    label=f"{station}: {', '.join(sorted(locations))}")
         ax.set_title(f"{name} ({VARIABLES[name][2]})")
         ax.set_xticks(range(1, 13))
         ax.grid(alpha=0.3)
@@ -371,7 +389,7 @@ def plot_climatologies(clim: pd.DataFrame, path: Path) -> None:
     handles, labels = axes[0, 0].get_legend_handles_labels()
     fig.legend(handles, labels, loc="center right", fontsize=8, frameon=False)
     fig.suptitle("Ecology monthly climatology at the station assigned to each site")
-    fig.tight_layout(rect=(0, 0, 0.83, 0.96))
+    fig.tight_layout(rect=(0, 0, 0.74, 0.96))
     fig.savefig(path, dpi=150)
     plt.close(fig)
 
@@ -442,11 +460,13 @@ def main() -> int:
                                "ecology_distance_km": row["assigned_distance_km"],
                                "ecology_n_profiles": row["assigned_n_profiles"],
                                **summarize_climatology(clim, args.min_months)})
-        log.info("%s: Ecology %s at %.1f km, %d profiles", row["location"],
-                 row["assigned_station"], row["assigned_distance_km"], row["assigned_n_profiles"])
+        log.info("%s: Ecology %s at %.1f km, %d profiles (%s)", row["location"],
+                 row["assigned_station"], row["assigned_distance_km"], row["assigned_n_profiles"],
+                 row["assignment_method"])
 
     # ORCA ---------------------------------------------------------------
     orca_status, orca_rows, orca_pairs = [], [], []
+    server_down = False
     if not args.skip_orca:
         for dataset, description, mlat, mlon in ORCA_MOORINGS:
             near = []
@@ -458,8 +478,14 @@ def main() -> int:
                 continue
             log.info("ORCA %s (%s): %d sites within %g km", dataset, description, len(near),
                      args.orca_max_km)
-            daily, status = orca_daily(dataset, years, args.max_depth, args.force)
-            orca_status += status
+            if server_down:
+                log.warning("  skipped: ERDDAP returned server errors for the previous mooring")
+                orca_status.append({"dataset": dataset, "status": "skipped (server unavailable)"})
+                daily = pd.DataFrame()
+            else:
+                daily, status = orca_daily(dataset, years, args.max_depth, args.force)
+                orca_status += status
+                server_down = all(s["status"] == "failed" for s in status)
             for location, distance in near:
                 orca_pairs.append({"location": location, "dataset": dataset,
                                    "mooring": description, "distance_km": distance,
@@ -490,8 +516,7 @@ def main() -> int:
     clim_path = TABLES_DIR / "monthly_climatology.tsv"
     clim_all.to_csv(clim_path, sep="\t", index=False)
 
-    predictors = sites[["location", "region", "latitude", "longitude", "coordinate_confidence",
-                        "n_samples"]].merge(pd.DataFrame(predictor_rows), on="location", how="left")
+    predictors = sites[["location", "region", "latitude", "longitude", "n_samples"]].merge(pd.DataFrame(predictor_rows), on="location", how="left")
     predictors_path = TABLES_DIR / "site_predictors_ecology.tsv"
     predictors.to_csv(predictors_path, sep="\t", index=False)
 
@@ -505,6 +530,8 @@ def main() -> int:
         produced.append(figure_path)
 
     orca_ok = sum(1 for s in orca_status if s["status"] == "ok")
+    orca_unfilled = sum(1 for s in orca_status if s["status"] != "ok"
+                        and s["status"] != "no data in window")
     with open(OUTPUT_DIR / "metadata.json", "w") as handle:
         json.dump({
             "script": SCRIPT_NAME,
@@ -515,6 +542,7 @@ def main() -> int:
                 "min_profiles": args.min_profiles, "min_months": args.min_months,
                 "orca_max_km": args.orca_max_km, "skip_orca": args.skip_orca, "force": args.force,
                 "ecology_qc_kept": ECOLOGY_QC_PASS, "orca_qc_kept": ORCA_QC_PASS,
+                "station_overrides": STATION_OVERRIDES,
                 "summer_months": list(SUMMER_MONTHS), "winter_months": list(WINTER_MONTHS),
             },
             "sources": {
@@ -551,10 +579,9 @@ def main() -> int:
     log.info("Wrote %d sites (%d with an Ecology station; %d with ORCA) to %s/",
              len(sites), int((assignment["assigned_station"] != "").sum()),
              len({r["location"] for r in orca_rows}), OUTPUT_DIR)
-    if orca_status and orca_ok < len(orca_status):
-        log.warning("%d of %d ORCA requests did not return data; rerun later to fill them in "
-                    "(cached years are not re-requested).", len(orca_status) - orca_ok,
-                    len(orca_status))
+    if orca_unfilled:
+        log.warning("%d ORCA requests failed or were skipped; rerun later to fill them in "
+                    "(cached years are not re-requested).", orca_unfilled)
     return 0
 
 

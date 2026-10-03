@@ -1,0 +1,96 @@
+{
+  "script": "07_orca_ecology_data.py",
+  "inputs": [
+    "output/04_environmental_data/site-coordinates.tsv"
+  ],
+  "parameters": {
+    "start_year": 2015,
+    "end_year": 2018,
+    "max_depth_m": 5.0,
+    "ecology_max_km": 25.0,
+    "min_profiles": 12,
+    "min_months": 10,
+    "orca_max_km": 30.0,
+    "skip_orca": false,
+    "force": false,
+    "ecology_qc_kept": 2,
+    "orca_qc_kept": 1,
+    "station_overrides": {
+      "Dogfish_Bay": "SIN001"
+    },
+    "summer_months": [
+      7,
+      8,
+      9
+    ],
+    "winter_months": [
+      12,
+      1,
+      2
+    ]
+  },
+  "sources": {
+    "ecology_netcdf": [
+      "https://fortress.wa.gov/ecy/ezshare/EAP/SalishSea/netCDF-files/MarineWaterProfilesAndNutrientsYear2015.nc",
+      "https://fortress.wa.gov/ecy/ezshare/EAP/SalishSea/netCDF-files/MarineWaterProfilesAndNutrientsYear2016.nc",
+      "https://fortress.wa.gov/ecy/ezshare/EAP/SalishSea/netCDF-files/MarineWaterProfilesAndNutrientsYear2017.nc",
+      "https://fortress.wa.gov/ecy/ezshare/EAP/SalishSea/netCDF-files/MarineWaterProfilesAndNutrientsYear2018.nc"
+    ],
+    "orca_erddap": "https://erddap.nanoos.org/erddap"
+  },
+  "orca_requests": [
+    {
+      "dataset": "orca_hydro_twanoh",
+      "year": 2015,
+      "status": "failed",
+      "url": "https://erddap.nanoos.org/erddap/griddap/orca_hydro_twanoh.csv?sea_water_temperature%5B(2015-01-01T00:00:00Z):1:(2015-12-31T23:59:59Z)%5D%5B(0.0):1:(5.0)%5D,sea_water_temperature_qc_aggregate%5B(2015-01-01T00:00:00Z):1:(2015-12-31T23:59:59Z)%5D%5B(0.0):1:(5.0)%5D,sea_water_practical_salinity%5B(2015-01-01T00:00:00Z):1:(2015-12-31T23:59:59Z)%5D%5B(0.0):1:(5.0)%5D,sea_water_practical_salinity_qc_aggregate%5B(2015-01-01T00:00:00Z):1:(2015-12-31T23:59:59Z)%5D%5B(0.0):1:(5.0)%5D,mass_concentration_of_oxygen_in_sea_water%5B(2015-01-01T00:00:00Z):1:(2015-12-31T23:59:59Z)%5D%5B(0.0):1:(5.0)%5D,mass_concentration_of_oxygen_in_sea_water_qc_aggregate%5B(2015-01-01T00:00:00Z):1:(2015-12-31T23:59:59Z)%5D%5B(0.0):1:(5.0)%5D,mass_concentration_of_chlorophyll_a_in_sea_water%5B(2015-01-01T00:00:00Z):1:(2015-12-31T23:59:59Z)%5D%5B(0.0):1:(5.0)%5D,mass_concentration_of_chlorophyll_a_in_sea_water_qc_aggregate%5B(2015-01-01T00:00:00Z):1:(2015-12-31T23:59:59Z)%5D%5B(0.0):1:(5.0)%5D"
+    },
+    {
+      "dataset": "orca_hydro_hoodsport",
+      "status": "skipped (server unavailable)"
+    },
+    {
+      "dataset": "orca_hydro_dabobbay",
+      "status": "skipped (server unavailable)"
+    },
+    {
+      "dataset": "orca_hydro_hansville",
+      "status": "skipped (server unavailable)"
+    },
+    {
+      "dataset": "orca_hydro_pointwells",
+      "status": "skipped (server unavailable)"
+    },
+    {
+      "dataset": "orca_hydro_carrinlet",
+      "status": "skipped (server unavailable)"
+    }
+  ],
+  "counts": {
+    "sites": 15,
+    "ecology_profiles": 1577,
+    "ecology_stations": 39,
+    "sites_with_ecology_station": 14,
+    "orca_requests_ok": 0,
+    "orca_requests_total": 6,
+    "sites_with_orca_summary": 0
+  },
+  "produced_files": [
+    "output/07_orca_ecology_data/tables/ecology_profiles.tsv",
+    "output/07_orca_ecology_data/tables/site_station_assignment.tsv",
+    "output/07_orca_ecology_data/tables/monthly_climatology.tsv",
+    "output/07_orca_ecology_data/tables/site_predictors_ecology.tsv",
+    "output/07_orca_ecology_data/tables/site_summary_orca.tsv",
+    "output/07_orca_ecology_data/figures/ecology_monthly_climatology.png"
+  ],
+  "date": "2026-10-03T11:23:38.997136+00:00",
+  "runtime_seconds": 32.3,
+  "software": {
+    "python": "3.8.5",
+    "pandas": "1.1.3",
+    "numpy": "1.19.2",
+    "h5py": "2.10.0",
+    "matplotlib": "3.3.2"
+  },
+  "notes": "Site coordinates are approximate centroids from step 04, not recorded collection points. Ecology stations are mid-channel monthly CTD casts and characterize the basin, not the tideflat. Coos Bay (Oregon) has no source in this step."
+}
