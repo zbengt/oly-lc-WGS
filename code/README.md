@@ -280,10 +280,11 @@ ported from the earlier Olurida_v081 analysis to the step 06 genotype likelihood
     `09_rda_genotypes.py scan`; `figures` and `metadata` finish.
   - Python needs numpy and pandas from the step 06 `angsd` env; R needs `vegan`.
 - **Outputs**
-  - `inputs/population-sets.tsv`, `<set>-pcoa.tsv` (principal coordinates of each response),
+  - `inputs/population-sets.tsv`, `collection-year.tsv`, `<set>-pcoa.tsv` (principal coordinates of each response),
     `individual-pcoa.tsv`, `reduce-metadata.json`
   - `tables/variance-partition.tsv`, `significance-tests.tsv`, `forward-selection.tsv`, `vif.tsv`,
     `temperature-only-models.tsv`, `individual-level-tests.tsv`, `sensitivity-refits.tsv`,
+    `per-year-models.tsv`, `temporal-fidalgo.tsv`,
     `outlier-summary.tsv`, `outlier-top-loci.tsv`, RDA scores and eigenvalues
   - `figures/rda-summary.png`, `outlier-manhattan.png`, `metadata.json`, `logs/`
   - `work/` per-window frequencies, `loadings-all.tsv.gz`, `rda-models.rds` (gitignored)
@@ -294,7 +295,13 @@ ported from the earlier Olurida_v081 analysis to the step 06 genotype likelihood
     SNP-standardised frequencies, which gives the same eigenvalues, R2, F and permutation p as the
     full matrix (checked on simulated data); every fit asserts inertia equal to the SNP count.
   - Sets: `env` (sites with every selected predictor), `all` (temperature-only models),
-    `env_merge_fidalgo` (the two Fidalgo Bay collections pooled).
+    `env_merge_fidalgo` (the two Fidalgo Bay collections pooled), `env_2018` and `env_2024`
+    (`env` split by collection year).
+  - Collection year: locations labelled `*18*` were sampled in 2018, the rest in 2024, so year is
+    confounded with site. Year (`y2024`) is a variance-partition component and a conditioning term,
+    environment tests are repeated with permutations restricted to within year (`permutation` column),
+    the environment model is refitted within each year, and `temporal-fidalgo.tsv` compares the
+    2018 vs 2024 Fidalgo Bay Fst with between-site Fst.
   - Individual-level tests permute predictors among whole sites; the free permutation is reported
     only to show how much pseudoreplication inflates significance.
   - Outliers: robust (MCD) Mahalanobis distance on the constrained-axis loadings, median-rescaled

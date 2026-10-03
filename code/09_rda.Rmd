@@ -23,6 +23,14 @@ frequencies), with the same model set:
   values, so they are not independent replicates), shown next to the
   pseudoreplicated free permutation.
 - **Sensitivity**: the two Fidalgo Bay collections pooled into one population.
+- **Collection year**: the `*18*` collections were sampled in 2018 and the
+  rest in 2024, and every site but Fidalgo Bay was sampled in one year only,
+  so year is confounded with site. Year enters as a covariate (`y2024`, 0/1)
+  in the variance partition and as a conditioning term; every environment test
+  is repeated with predictors permuted only among sites of the same year
+  (population and individual level); the environment-only models are refitted
+  within each year; and the 2018 vs 2024 Fidalgo Bay difference is set against
+  the between-site Fst as a direct estimate of the temporal (or batch) effect.
 - **Outlier scan** on the constrained axes (robust Mahalanobis, Capblancq and
   Forester 2021), reported with q-values.
 
@@ -119,7 +127,12 @@ Each set is a list of units (populations) for one response matrix. `env` is
 every site with all selected predictors (step 08 `in_env_model`); `all` is
 every site, for the temperature-only models; `env_merge_fidalgo` pools the
 individuals of the two Fidalgo Bay collections, which share coordinates and an
-Ecology station.
+Ecology station; `env_2018` and `env_2024` split `env` by collection year.
+
+Collection year is read from the location label: labels containing `18`
+(CS18, FB18, HC18, NS18, PGB18, SS18) are the 2018 collections, everything
+else is 2024. The table is written to `inputs/collection-year.tsv` and is the
+only source of year for the later chunks.
 
 ```{bash population-sets-job}
 set -euo pipefail
@@ -134,11 +147,19 @@ site <- read.delim("../output/08_environmental_predictors/tables/site-env-matrix
 samples <- read.delim("../output/06_angsd_structure/samples/samples.tsv", stringsAsFactors = FALSE)
 stopifnot(setequal(site$location, unique(samples$location)))
 
+year <- data.frame(location = sort(site$location))
+year$year <- ifelse(grepl("18", year$location), 2018L, 2024L)
+write.table(year, file.path(out, "inputs/collection-year.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
+
 env_sites <- sort(site$location[as.logical(site$in_env_model)])   # written by pandas as True/False
 fidalgo <- c("FB18_Wild", "Fidalgo_Bay")
 sets <- rbind(
   data.frame(set = "env", unit = env_sites, location = env_sites),
   data.frame(set = "all", unit = sort(site$location), location = sort(site$location)))
+for (y in sort(unique(year$year))) {
+  ys <- intersect(env_sites, year$location[year$year == y])
+  sets <- rbind(sets, data.frame(set = paste0("env_", y), unit = ys, location = ys))
+}
 if (all(fidalgo %in% env_sites)) {
   merged <- paste(fidalgo, collapse = "+")
   rest <- setdiff(env_sites, fidalgo)
@@ -147,6 +168,7 @@ if (all(fidalgo %in% env_sites)) {
 }
 write.table(sets, file.path(out, "inputs/population-sets.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
 table(sets$set)
+table(year$year[year$location %in% env_sites])
 setdiff(site$location, env_sites)   # sites left out of the environmental model
 ```
 
@@ -206,10 +228,21 @@ grep -l -E "Error|error|Killed|OOM|No space" ${out}/logs/*.out 2>/dev/null | hea
 # RDA models
 
 Population-level models on the `env` set, the temperature-only models on `all`,
-the individual-level tests, and the pooled-Fidalgo refit. Writes the
-constrained-axis unit scores that the scan job projects SNPs onto. Takes about
-a minute as a job; most of it is the 999 site-level permutations of the
-individual-level models.
+the individual-level tests, the pooled-Fidalgo refit, and the collection-year
+checks. Writes the constrained-axis unit scores that the scan job projects SNPs
+onto. Takes a few minutes as a job; most of it is the 999 site-level
+permutations of the individual-level models.
+
+**Collection year.** `y2024` (0 for 2018, 1 for 2024; 0.5 for the pooled
+Fidalgo unit) is added to the variance partition on its own, as a condition on
+the environment, and to the full model. Tests carry a `permutation` column:
+`free` permutes whole sites as before; `within year` permutes only among sites
+of the same collection year (`how(blocks = year)`), so a predictor that merely
+differs between the 2018 and 2024 cohorts cannot reach significance. A model
+of year alone is not tested within year (its F is invariant to that
+permutation). `per-year-models.tsv` refits the environment within each year
+(7 sites each, so low power) and `temporal-fidalgo.tsv` compares Fst between
+the 2018 and 2024 Fidalgo Bay collections with Fst between sites.
 
 ```{bash rda-models-job}
 set -euo pipefail
@@ -232,6 +265,9 @@ PRED <- meta08$parameters$predictors
 site <- read.delim("../output/08_environmental_predictors/tables/site-env-matrix.tsv", stringsAsFactors = FALSE)
 pca <- read.delim("../output/06_angsd_structure/tables/pca_scores.tsv", stringsAsFactors = FALSE)
 site <- merge(site, aggregate(cbind(PC1, PC2) ~ location, data = pca, FUN = mean), by = "location")
+year <- read.delim(file.path(out, "inputs/collection-year.tsv"), stringsAsFactors = FALSE)
+stopifnot(setequal(year$location, site$location))
+site$y2024 <- as.numeric(year$year[match(site$location, year$location)] == 2024)
 sets <- read.delim(file.path(out, "inputs/population-sets.tsv"), stringsAsFactors = FALSE)
 
 # predictors per unit: the mean over member locations (identical for the pooled Fidalgo pair)
@@ -253,18 +289,20 @@ read_response <- function(set_name) {
 }
 fml <- function(lhs, rhs) as.formula(paste(lhs, "~", rhs))
 r2 <- function(m) unlist(RsquareAdj(m)[c("r.squared", "adj.r.squared")])
-tests <- function(m, model) {
-  g <- anova(m, permutations = nperm)
-  rows <- list(data.frame(model = model, scope = "global", term = "constrained", df = g$Df[1],
-                          variance = g$Variance[1], F = g$F[1], p = g$`Pr(>F)`[1]))
+# permutation designs: free, or only among units of the same collection year
+within_year <- function(d) how(nperm = nperm, blocks = factor(d$y2024))
+tests <- function(m, model, perm = nperm, label = "free") {
+  g <- anova(m, permutations = perm)
+  rows <- list(data.frame(model = model, permutation = label, scope = "global", term = "constrained",
+                          df = g$Df[1], variance = g$Variance[1], F = g$F[1], p = g$`Pr(>F)`[1]))
   if (m$CCA$rank > 1 || length(attr(terms(m), "term.labels")) > 1) {
-    tt <- anova(m, by = "margin", permutations = nperm)
-    ax <- anova(m, by = "axis", permutations = nperm)
+    tt <- anova(m, by = "margin", permutations = perm)
+    ax <- anova(m, by = "axis", permutations = perm)
     rows <- c(rows, list(
-      data.frame(model = model, scope = "term (marginal)", term = rownames(tt), df = tt$Df,
-                 variance = tt$Variance, F = tt$F, p = tt$`Pr(>F)`),
-      data.frame(model = model, scope = "axis", term = rownames(ax), df = ax$Df,
-                 variance = ax$Variance, F = ax$F, p = ax$`Pr(>F)`)))
+      data.frame(model = model, permutation = label, scope = "term (marginal)", term = rownames(tt),
+                 df = tt$Df, variance = tt$Variance, F = tt$F, p = tt$`Pr(>F)`),
+      data.frame(model = model, permutation = label, scope = "axis", term = rownames(ax),
+                 df = ax$Df, variance = ax$Variance, F = ax$F, p = ax$`Pr(>F)`)))
   }
   do.call(rbind, rows)
 }
@@ -274,17 +312,28 @@ E <- unit_data("env"); Y <- read_response("env")
 stopifnot(identical(rownames(Y), rownames(E)))
 GEO <- head(grep("^MEM[0-9]+$", names(E), value = TRUE), n_mem)
 env_rhs <- paste(PRED, collapse = " + "); geo_rhs <- paste(GEO, collapse = " + "); str_rhs <- "PC1 + PC2"
+yr_rhs <- "y2024"
 models <- list(
   env      = rda(fml("Y", env_rhs), data = E),
   geo      = rda(fml("Y", geo_rhs), data = E),
   str      = rda(fml("Y", str_rhs), data = E),
+  year     = rda(fml("Y", yr_rhs), data = E),
   env_geo  = rda(fml("Y", paste(env_rhs, "+ Condition(", geo_rhs, ")")), data = E),
   env_str  = rda(fml("Y", paste(env_rhs, "+ Condition(", str_rhs, ")")), data = E),
   env_both = rda(fml("Y", paste(env_rhs, "+ Condition(", geo_rhs, "+", str_rhs, ")")), data = E),
-  full     = rda(fml("Y", paste(env_rhs, "+", geo_rhs, "+", str_rhs)), data = E))
+  env_year = rda(fml("Y", paste(env_rhs, "+ Condition(", yr_rhs, ")")), data = E),
+  env_geo_year = rda(fml("Y", paste(env_rhs, "+ Condition(", geo_rhs, "+", yr_rhs, ")")), data = E),
+  env_all  = rda(fml("Y", paste(env_rhs, "+ Condition(", geo_rhs, "+", str_rhs, "+", yr_rhs, ")")), data = E),
+  year_env_geo = rda(fml("Y", paste(yr_rhs, "+ Condition(", env_rhs, "+", geo_rhs, ")")), data = E),
+  full     = rda(fml("Y", paste(env_rhs, "+", geo_rhs, "+", str_rhs)), data = E),
+  full_year = rda(fml("Y", paste(env_rhs, "+", geo_rhs, "+", str_rhs, "+", yr_rhs)), data = E))
 labels <- c(env = "environment", geo = "geography (dbMEM)", str = "structure (PC1 + PC2)",
-            env_geo = "environment | geography", env_str = "environment | structure",
-            env_both = "environment | geography + structure", full = "full model")
+            year = "collection year", env_geo = "environment | geography",
+            env_str = "environment | structure", env_both = "environment | geography + structure",
+            env_year = "environment | year", env_geo_year = "environment | geography + year",
+            env_all = "environment | geography + structure + year",
+            year_env_geo = "year | environment + geography",
+            full = "full model", full_year = "full model + year")
 vp <- data.frame(model = names(models), component = labels[names(models)],
                  t(sapply(models, r2)), row.names = NULL)
 names(vp)[3:4] <- c("r2", "r2_adj")
@@ -301,23 +350,31 @@ sel_tab <- as.data.frame(sel$anova)
 sel_tab <- if (nrow(sel_tab)) cbind(step = rownames(sel_tab), sel_tab) else data.frame(step = "none admitted")
 write.table(sel_tab, file.path(out, "tables/forward-selection.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
 
-sig <- do.call(rbind, lapply(c("env", "geo", "str", "env_geo", "env_str", "env_both"),
-                             function(nm) tests(models[[nm]], nm)))
+free_set <- c("env", "geo", "str", "year", "env_geo", "env_str", "env_both",
+              "env_year", "env_geo_year", "env_all", "year_env_geo")
+strat_set <- c("env", "env_geo", "env_str", "env_both", "env_year", "env_geo_year", "env_all")
+sig <- rbind(do.call(rbind, lapply(free_set, function(nm) tests(models[[nm]], nm))),
+             do.call(rbind, lapply(strat_set, function(nm) tests(models[[nm]], nm, within_year(E), "within year"))))
 write.table(sig, file.path(out, "tables/significance-tests.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
 
 ## ---- temperature only, all sites ----------------------------------------------
 Ea <- unit_data("all"); Ya <- read_response("all")
 stopifnot(identical(rownames(Ya), rownames(Ea)), !anyNA(Ea$temp_summer_mean))
 temp_rows <- list()
-for (cond in c("none", "MEMall1", "PC1 + PC2")) {
+for (cond in c("none", "MEMall1", "PC1 + PC2", "y2024", "MEMall1 + y2024")) {
   rhs <- if (cond == "none") "temp_summer_mean" else paste("temp_summer_mean + Condition(", cond, ")")
-  m <- rda(fml("Ya", rhs), data = Ea); g <- anova(m, permutations = nperm)
-  temp_rows[[cond]] <- data.frame(set = "all", n_units = nrow(Ya), n_snp = reduce_meta$sets$all$n_snp,
-                                  conditioning = cond, r2 = r2(m)[1], r2_adj = r2(m)[2], F = g$F[1], p = g$`Pr(>F)`[1])
+  m <- rda(fml("Ya", rhs), data = Ea)
+  for (perm in c("free", "within year")) {
+    g <- anova(m, permutations = if (perm == "free") nperm else within_year(Ea))
+    temp_rows[[paste(cond, perm)]] <- data.frame(set = "all", n_units = nrow(Ya), n_snp = reduce_meta$sets$all$n_snp,
+                                                 conditioning = cond, permutation = perm, r2 = r2(m)[1],
+                                                 r2_adj = r2(m)[2], F = g$F[1], p = g$`Pr(>F)`[1])
+  }
 }
 m <- rda(Y ~ temp_summer_mean, data = E); g <- anova(m, permutations = nperm)
 temp_rows$env <- data.frame(set = "env", n_units = nrow(Y), n_snp = reduce_meta$sets$env$n_snp,
-                            conditioning = "none", r2 = r2(m)[1], r2_adj = r2(m)[2], F = g$F[1], p = g$`Pr(>F)`[1])
+                            conditioning = "none", permutation = "free", r2 = r2(m)[1], r2_adj = r2(m)[2],
+                            F = g$F[1], p = g$`Pr(>F)`[1])
 write.table(do.call(rbind, temp_rows), file.path(out, "tables/temperature-only-models.tsv"),
             sep = "\t", quote = FALSE, row.names = FALSE)
 
@@ -328,25 +385,40 @@ stopifnot(abs(sum(apply(Xi, 2, var)) - reduce_meta$sets$individual$n_snp) < 1e-3
 units <- rownames(E)
 idx <- match(X$location, units)
 stopifnot(!anyNA(idx))
-site_data <- function(map) E[units[map[idx]], c(PRED, GEO), drop = FALSE]
+site_data <- function(map) E[units[map[idx]], c(PRED, GEO, "y2024"), drop = FALSE]
 Fstat <- function(m) {
   df_c <- m$CCA$rank
   df_r <- nrow(m$CCA$u) - 1 - df_c - if (is.null(m$pCCA)) 0 else m$pCCA$rank
   (m$CCA$tot.chi / df_c) / (m$CA$tot.chi / df_r)
 }
-site_perm <- function(rhs) {
+# a site permutation: free, or shuffling sites only among those of the same collection year
+shuffle <- function(within) {
+  if (!within) return(sample.int(length(units)))
+  map <- seq_along(units)
+  for (g in split(seq_along(units), E$y2024)) map[g] <- g[sample.int(length(g))]
+  map
+}
+site_perm <- function(rhs, within = FALSE) {
   f <- fml("Xi", rhs)
   m <- rda(f, data = site_data(seq_along(units)))
-  null <- replicate(nperm, Fstat(rda(f, data = site_data(sample(seq_along(units))))))
+  null <- replicate(nperm, Fstat(rda(f, data = site_data(shuffle(within)))))
   list(m = m, F = Fstat(m), p = (1 + sum(null >= Fstat(m))) / (1 + nperm), null = null)
 }
+ind_rhs <- function(nm) switch(nm, env = env_rhs, env_geo = paste(env_rhs, "+ Condition(", geo_rhs, ")"),
+                               env_year = paste(env_rhs, "+ Condition(", yr_rhs, ")"), nm)
 ind_rows <- list()
 for (nm in c("env", "env_geo", PRED)) {
-  rhs <- switch(nm, env = env_rhs, env_geo = paste(env_rhs, "+ Condition(", geo_rhs, ")"), nm)
-  z <- site_perm(rhs)
+  z <- site_perm(ind_rhs(nm))
   ind_rows[[nm]] <- data.frame(model = nm, permutation = "among sites", n_individuals = nrow(Xi),
                                r2_adj = RsquareAdj(z$m)$adj.r.squared, F = z$F, p = z$p)
   if (nm == "env") { null_site <- z$null; F_obs <- z$F }
+}
+for (nm in c("env", "env_geo", "env_year", PRED)) {
+  z <- site_perm(ind_rhs(nm), within = TRUE)
+  ind_rows[[paste(nm, "within")]] <- data.frame(model = nm, permutation = "among sites within year",
+                                                n_individuals = nrow(Xi), r2_adj = RsquareAdj(z$m)$adj.r.squared,
+                                                F = z$F, p = z$p)
+  if (nm == "env") null_year <- z$null
 }
 m_free <- rda(fml("Xi", env_rhs), data = site_data(seq_along(units)))
 null_free <- replicate(nperm, Fstat(rda(fml("Xi", env_rhs), data = site_data(seq_along(units))[sample(nrow(Xi)), ])))
@@ -355,7 +427,8 @@ ind_rows$free <- data.frame(model = "env", permutation = "free (pseudoreplicated
                             p = (1 + sum(null_free >= Fstat(m_free))) / (1 + nperm))
 write.table(do.call(rbind, ind_rows), file.path(out, "tables/individual-level-tests.tsv"),
             sep = "\t", quote = FALSE, row.names = FALSE)
-write.table(data.frame(permutation = rep(c("among sites", "free"), each = nperm), F = c(null_site, null_free)),
+write.table(data.frame(permutation = rep(c("among sites", "among sites within year", "free"), each = nperm),
+                       F = c(null_site, null_year, null_free)),
             file.path(out, "tables/individual-permutation-null.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
 
 ## ---- sensitivity: Fidalgo collections pooled -------------------------------------
@@ -376,12 +449,46 @@ if ("env_merge_fidalgo" %in% sets$set) {
   write.table(sens, file.path(out, "tables/sensitivity-refits.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
 }
 
+## ---- collection year: environment refitted within each year ------------------------
+per_year <- list()
+for (y in c(2018, 2024)) {
+  nm <- paste0("env_", y)
+  if (!nm %in% sets$set) next
+  Ey <- unit_data(nm); Yy <- read_response(nm)
+  stopifnot(identical(rownames(Yy), rownames(Ey)), all(Ey$y2024 == (y == 2024)))
+  for (term in c("env", PRED)) {
+    m <- rda(fml("Yy", if (term == "env") env_rhs else term), data = Ey)
+    g <- anova(m, permutations = nperm)
+    per_year[[paste(y, term)]] <- data.frame(year = y, model = term, n_units = nrow(Yy),
+                                             n_snp = reduce_meta$sets[[nm]]$n_snp, r2 = r2(m)[1],
+                                             r2_adj = r2(m)[2], F = g$F[1], p = g$`Pr(>F)`[1])
+  }
+}
+per_year <- do.call(rbind, per_year)
+write.table(per_year, file.path(out, "tables/per-year-models.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
+
+## ---- collection year: the two Fidalgo Bay collections vs between-site Fst ---------------
+fst <- read.delim("../output/06_angsd_structure/tables/fst_pairs.tsv", stringsAsFactors = FALSE)
+fst <- fst[fst$pop1 %in% units & fst$pop2 %in% units, ]
+yr <- setNames(ifelse(E$y2024 == 1, 2024, 2018), units)
+fidalgo_pair <- (fst$pop1 %in% c("FB18_Wild", "Fidalgo_Bay")) & (fst$pop2 %in% c("FB18_Wild", "Fidalgo_Bay"))
+fst$comparison <- ifelse(fidalgo_pair, "Fidalgo Bay 2018 vs 2024 (same site)",
+                  ifelse(yr[fst$pop1] != yr[fst$pop2], "between sites, different years",
+                         paste("between sites, both", yr[fst$pop1])))
+between <- fst$fst_weighted[!fidalgo_pair]
+temporal <- do.call(rbind, lapply(split(fst, fst$comparison), function(d)
+  data.frame(comparison = d$comparison[1], n_pairs = nrow(d), fst_weighted_mean = mean(d$fst_weighted),
+             fst_weighted_min = min(d$fst_weighted), fst_weighted_median = median(d$fst_weighted),
+             fst_weighted_max = max(d$fst_weighted),
+             fraction_of_between_site_pairs_below = mean(between < mean(d$fst_weighted)))))
+write.table(temporal, file.path(out, "tables/temporal-fidalgo.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
+
 ## ---- scores for the scan and the figures --------------------------------------------
 # Linear-combination unit scores (CCA$u): a SNP's loading on axis k is its
 # standardised frequency vector dotted with u_k, up to a per-axis constant.
 write.table(models$env$CCA$u, file.path(out, "tables/axis-unit-scores.tsv"), sep = "\t", quote = FALSE, col.names = NA)
 sc <- scores(models$env, display = c("sites", "bp"), scaling = 2, choices = 1:2)
-write.table(data.frame(unit = rownames(sc$sites), region = E$region, sc$sites),
+write.table(data.frame(unit = rownames(sc$sites), region = E$region, year = ifelse(E$y2024 == 1, 2024, 2018), sc$sites),
             file.path(out, "tables/rda-unit-scores.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
 write.table(data.frame(term = rownames(sc$biplot), sc$biplot),
             file.path(out, "tables/rda-biplot-scores.tsv"), sep = "\t", quote = FALSE, row.names = FALSE)
@@ -394,6 +501,8 @@ saveRDS(list(models = models, E = E, predictors = PRED, geography = GEO), file.p
 vp
 sig[sig$scope == "global", ]
 do.call(rbind, ind_rows)
+per_year
+temporal
 ```
 
 # Outlier scan
@@ -469,7 +578,8 @@ par(mar = c(4.5, 4.5, 3, 1))
 # triplot
 regions <- sort(unique(us$region)); pal <- setNames(hcl.colors(length(regions), "Dark 3"), regions)
 lim <- range(c(us$RDA1, us$RDA2, bp$RDA1, bp$RDA2)) * 1.2
-plot(us$RDA1, us$RDA2, pch = 16, col = pal[us$region], xlim = lim, ylim = lim, asp = 1,
+yr_pch <- c("2018" = 16, "2024" = 17)
+plot(us$RDA1, us$RDA2, pch = yr_pch[as.character(us$year)], col = pal[us$region], xlim = lim, ylim = lim, asp = 1,
      xlab = sprintf("RDA1 (%.1f%% of total)", 100 * eig$prop_total[1]),
      ylab = sprintf("RDA2 (%.1f%% of total)", 100 * eig$prop_total[2]), main = "Environment-only RDA")
 s <- 0.9 * max(abs(c(us$RDA1, us$RDA2))) / max(abs(c(bp$RDA1, bp$RDA2)))
@@ -500,20 +610,22 @@ repel_text(c(us$RDA1, 1.1 * s * bp$RDA1), c(us$RDA2, 1.1 * s * bp$RDA2), c(us$un
            cex = rep(c(0.55, 0.7), c(nrow(us), nrow(bp))),
            col = rep(c("black", "firebrick"), c(nrow(us), nrow(bp))))
 legend("bottomleft", legend = regions, col = pal, pch = 16, cex = 0.6, bty = "n")
+legend("bottomright", legend = names(yr_pch), pch = yr_pch, cex = 0.6, bty = "n", title = "collected")
 abline(h = 0, v = 0, lty = 3)
 
 # individual level: null distributions
 F_obs <- ind$F[ind$model == "env" & ind$permutation == "among sites"]
 br <- pretty(range(c(nulls$F, F_obs)), 40)
-h1 <- hist(nulls$F[nulls$permutation == "among sites"], breaks = br, plot = FALSE)
-h2 <- hist(nulls$F[nulls$permutation == "free"], breaks = br, plot = FALSE)
-plot(h1, col = adjustcolor("steelblue", 0.6), border = NA, ylim = c(0, max(h1$counts, h2$counts)),
+perms <- c("among sites", "among sites within year", "free")
+shown <- c("among sites", "among sites within year", "free (pseudoreplicated)")
+cols <- adjustcolor(c("steelblue", "seagreen", "darkorange"), 0.5)
+hs <- lapply(perms, function(k) hist(nulls$F[nulls$permutation == k], breaks = br, plot = FALSE))
+plot(hs[[1]], col = cols[1], border = NA, ylim = c(0, max(sapply(hs, function(h) max(h$counts)))),
      xlab = "pseudo-F", main = "Individual-level null distributions")
-plot(h2, col = adjustcolor("darkorange", 0.6), border = NA, add = TRUE)
+for (k in 2:3) plot(hs[[k]], col = cols[k], border = NA, add = TRUE)
 abline(v = F_obs, lwd = 2)
-legend("topright", bty = "n", cex = 0.75, fill = adjustcolor(c("steelblue", "darkorange"), 0.6),
-       legend = sprintf("%s, p = %.3f", c("among sites", "free (pseudoreplicated)"),
-                        ind$p[ind$model == "env" & ind$permutation %in% c("among sites", "free (pseudoreplicated)")]))
+legend("topright", bty = "n", cex = 0.75, fill = cols,
+       legend = sprintf("%s, p = %.3f", shown, ind$p[ind$model == "env"][match(shown, ind$permutation[ind$model == "env"])]))
 dev.off()
 
 # Manhattan of the outlier scan
@@ -555,6 +667,7 @@ metadata <- list(
   parameters = list(
     predictors = meta08$parameters$predictors, geography = "dbMEM 1-2 (step 08)",
     structure = "population means of PCAngsd PC1 and PC2 (step 06)", permutations = 999, seed = 42,
+    collection_year = "2018 for location labels containing '18', else 2024 (inputs/collection-year.tsv); covariate y2024, within-year permutations via how(blocks = year)",
     min_maf = reduce_meta$parameters$min_maf, allele_frequencies = "EM on genotype likelihoods per population (ANGSD Beagle, step 06)",
     individual_dosages = "posterior mean under HWE at the all-sample frequency",
     outlier_test = "robust (MCD) Mahalanobis on constrained-axis loadings, median-rescaled chi-square, BH q-values",
