@@ -28,6 +28,8 @@ Additional details for each analysis step are documented in
 | 5 | `code/05_realign_xbOstLuri2.Rmd` | Re-align all samples to the chromosome-level NCBI reference GCA_061535525.1 (xbOstLuri2) with read groups and duplicate marking, via SLURM array jobs | `output/05_realign_xbOstLuri2/alignments/`, `metrics/`, `figures/` |
 | 6 | `code/06_angsd_structure.Rmd` | Genotype-likelihood population structure on the step 05 BAMs: ANGSD Beagle likelihoods, PCAngsd PCA and admixture, folded SFS diversity, and pairwise Fst for all 15 locations | `output/06_angsd_structure/tables/`, `figures/`, `pca/`, `sfs/`, `fst/` |
 | 7 | `code/07_orca_ecology_data.py` | Site-level 2015–2018 marine climatologies (0–5 m temperature, salinity, oxygen, chlorophyll) from WA Ecology CTD profiles and ORCA moorings, as predictors for genotype-environment analyses | `output/07_orca_ecology_data/tables/site_predictors_ecology.tsv`, `figures/` |
+| 8 | `code/08_environmental_predictors.py` | RDA predictor matrix from the step 07 climatologies: Coos Bay temperature from NOAA CO-OPS, dbMEM geography, collinearity and VIF screen of candidate predictors | `output/08_environmental_predictors/tables/site-env-matrix.tsv`, `figures/` |
+| 9 | `code/09_rda.Rmd` (+ `code/09_rda_genotypes.py`) | Genotype-environment RDA: per-population allele frequencies from the step 06 genotype likelihoods, variance partitioning, permutation tests, temperature-only and individual-level models, and an outlier scan | `output/09_rda/tables/`, `figures/` |
 
 ## Requirements
 
@@ -51,6 +53,8 @@ python code/04_environmental_data.py --days 30 --radius-km 75
 Rscript -e 'rmarkdown::render("code/05_realign_xbOstLuri2.Rmd")'   # or run its chunks in RStudio
 Rscript -e 'rmarkdown::render("code/06_angsd_structure.Rmd")'      # submits SLURM jobs; rerun R chunks when done
 python code/07_orca_ecology_data.py --start-year 2015 --end-year 2018
+python code/08_environmental_predictors.py
+Rscript -e 'rmarkdown::render("code/09_rda.Rmd")'                 # submits SLURM jobs; rerun R chunks when done
 ```
 
 All outputs are written with relative paths so results remain reproducible across

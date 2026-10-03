@@ -234,3 +234,68 @@ analyses (replaces the step 04 30-day NOAA snapshot).
     straight-line nearest station is across land (currently Dogfish Bay → SIN001).
   - ORCA requests that fail with a server error stop further ORCA requests for that run and are
     recorded in `metadata.json`; rerun later to fill them in. Coos Bay has no source in this step.
+
+## 08_environmental_predictors.py
+
+Turns the step 07 site climatologies into the predictor side of the step 09 RDA.
+
+- **Inputs**
+  - `output/07_orca_ecology_data/tables/site_predictors_ecology.tsv` and `metadata.json` (window years)
+  - `output/04_environmental_data/site-coordinates.tsv`
+  - NOAA CO-OPS water temperature (`api.tidesandcurrents.noaa.gov`) for sites without an Ecology station
+- **Execution**
+  - Run from the repository root: `python code/08_environmental_predictors.py`
+  - `--predictors` (default `temp_summer_mean,sal_range,chl_summer_mean`), `--candidates` (collinearity
+    screen), `--coops` (default `Coos_Bay=9432780`), `--vif-threshold` (5), `--force` (re-download)
+- **Outputs**
+  - `tables/site-env-matrix.tsv` one row per site: predictors, source station, `in_env_model`
+    (has every selected predictor), `shares_station_with`, dbMEM axes `MEM*` (sites in the model) and
+    `MEMall*` (all sites)
+  - `tables/vif.tsv`, `vif-elimination.tsv`, `candidate-sets.tsv`, `predictor-correlation.tsv`,
+    `within-family-correlation.tsv`, `environment-pca.tsv`, `dbmem.tsv`
+  - `figures/predictor-correlation.png`, `metadata.json`, `logs/pipeline.log`; `raw/` CO-OPS downloads (gitignored)
+- **Notes**
+  - CO-OPS temperature is summarised with step 07's own climatology functions (imported from the
+    script) over step 07's years, so the Coos Bay values are comparable to the Ecology ones.
+  - dbMEM: great-circle distances truncated at the longest minimum-spanning-tree edge; axes with
+    Moran's I above its expectation are kept, broad scales first.
+  - Backward VIF elimination drops both temperature terms (they are the most collinear members of the
+    main estuarine gradient), so the selected set is named rather than mechanical; `candidate-sets.tsv`
+    compares it with the alternatives.
+  - Rerun whenever step 07 changes.
+
+## 09_rda.Rmd and 09_rda_genotypes.py
+
+Genotype-environment redundancy analysis on population allele frequencies,
+ported from the earlier Olurida_v081 analysis to the step 06 genotype likelihoods.
+
+- **Inputs**
+  - Per-window Beagle files `output/06_angsd_structure/gl/NNN_*.beagle.gz` and `samples/samples.tsv`
+  - `output/06_angsd_structure/tables/pca_scores.tsv` (structure covariates: population means of PC1, PC2)
+  - `output/08_environmental_predictors/tables/site-env-matrix.tsv` and `metadata.json`
+- **Execution**
+  - Run the chunks in order on Hyak, or `Rscript -e 'rmarkdown::render("code/09_rda.Rmd")'`.
+  - `population-sets` writes the unit lists; `reduce` submits one SLURM job (`coenv` / `cpu-g2`, 16 CPUs)
+    running `09_rda_genotypes.py reduce`; `rda-models` fits the vegan models; `scan` submits
+    `09_rda_genotypes.py scan`; `figures` and `metadata` finish.
+  - Python needs numpy and pandas from the step 06 `angsd` env; R needs `vegan`.
+- **Outputs**
+  - `inputs/population-sets.tsv`, `<set>-pcoa.tsv` (principal coordinates of each response),
+    `individual-pcoa.tsv`, `reduce-metadata.json`
+  - `tables/variance-partition.tsv`, `significance-tests.tsv`, `forward-selection.tsv`, `vif.tsv`,
+    `temperature-only-models.tsv`, `individual-level-tests.tsv`, `sensitivity-refits.tsv`,
+    `outlier-summary.tsv`, `outlier-top-loci.tsv`, RDA scores and eigenvalues
+  - `figures/rda-summary.png`, `outlier-manhattan.png`, `metadata.json`, `logs/`
+  - `work/` per-window frequencies, `loadings-all.tsv.gz`, `rda-models.rds` (gitignored)
+- **Notes**
+  - Population frequencies are EM estimates from the genotype likelihoods of each population's
+    individuals; SNPs need data in every unit and a mean frequency in [0.05, 0.95].
+  - The RDA is fitted to the principal coordinates of the units x units Gram matrix of the
+    SNP-standardised frequencies, which gives the same eigenvalues, R2, F and permutation p as the
+    full matrix (checked on simulated data); every fit asserts inertia equal to the SNP count.
+  - Sets: `env` (sites with every selected predictor), `all` (temperature-only models),
+    `env_merge_fidalgo` (the two Fidalgo Bay collections pooled).
+  - Individual-level tests permute predictors among whole sites; the free permutation is reported
+    only to show how much pseudoreplication inflates significance.
+  - Outliers: robust (MCD) Mahalanobis distance on the constrained-axis loadings, median-rescaled
+    against chi-square, Benjamini-Hochberg q-values.
