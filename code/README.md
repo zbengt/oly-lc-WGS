@@ -29,6 +29,19 @@ Low-coverage WGS alignment and genetic connectedness summary pipeline.
     plotting, but re-align with `--force` (or `samtools addreplacerg`) to fix the VCF.
   - The IBS heatmap plots PLINK's `.mibs` values directly (proportion of alleles
     shared); an earlier version inverted them.
+  - `--fix-read-groups` adds the missing `@RG` line in place to existing BAMs with
+    `samtools addreplacerg`, in parallel, before variant calling.
+  - If the filtered VCF carries file paths as sample names (from BAMs aligned
+    without read groups), the script rewrites its header to sample IDs with
+    `bcftools reheader` and regenerates the PLINK outputs and figure.
+  - `--force-variants` re-runs mpileup/call/filter and everything downstream;
+    `--force-plink` re-runs only PLINK and the figure from the existing filtered
+    VCF. Plain `--force` also re-aligns and re-indexes the reference.
+  - With `--skip-blanks`, blanks already present in an existing VCF are dropped
+    from the PLINK PCA/IBS via `--keep`.
+  - `--min-mean-depth` (default 1.0x) drops samples below that genome-wide depth in
+    `metrics/coverage_summary.tsv` from the PCA/IBS; the excluded IDs are recorded in
+    `metadata.json`. `HC18_Triton_Wild_10` (0.26x) is the only current sample affected.
   - All outputs use relative paths to maintain reproducibility.
 
 ## 02_bam_summary.py

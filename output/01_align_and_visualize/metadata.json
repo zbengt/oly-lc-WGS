@@ -1,24 +1,31 @@
 {
   "script": "01_align_and_visualize.py",
-  "date": "2025-11-22T19:22:11Z",
-  "runtime_seconds": 7.5116400718688965,
+  "date": "2026-09-19T18:38:08Z",
+  "runtime_seconds": 40.00916314125061,
   "parameters": {
     "raw_dir": "data/raw",
     "genome_fasta": "data/genome/Olurida_v081.fa",
-    "threads": 32,
+    "threads": 24,
     "threads_per_sample": 4,
     "memory_mb": 200,
     "min_mapq": 20,
     "max_depth": 200,
     "min_total_depth": 10,
     "min_qual": 30.0,
-    "skip_blanks": false,
+    "skip_blanks": true,
+    "min_mean_depth": 1.0,
+    "excluded_low_depth_samples": [
+      "Blank_plate1",
+      "Blank_plate2",
+      "HC18_Triton_Wild_10"
+    ],
+    "fix_read_groups": false,
+    "force_variants": false,
+    "force_plink": true,
     "force": false
   },
   "outputs": {
     "alignments": [
-      "output/01_align_and_visualize/alignments/Blank_plate1.sorted.bam",
-      "output/01_align_and_visualize/alignments/Blank_plate2.sorted.bam",
       "output/01_align_and_visualize/alignments/CS18_22_Wild_plate1_A7.sorted.bam",
       "output/01_align_and_visualize/alignments/CS18_22_Wild_plate1_C6.sorted.bam",
       "output/01_align_and_visualize/alignments/CS18_22_Wild_plate1_D6.sorted.bam",

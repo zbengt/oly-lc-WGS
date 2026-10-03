@@ -46,6 +46,7 @@ import shutil
 import subprocess
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
@@ -163,9 +164,39 @@ def parse_args() -> argparse.Namespace:
         help="Exclude samples whose prefixes start with 'Blank'.",
     )
     parser.add_argument(
+        "--min-mean-depth",
+        type=float,
+        default=1.0,
+        help=(
+            "Exclude samples whose genome-wide mean depth in metrics/coverage_summary.tsv "
+            "is below this from the PLINK PCA/IBS and figure (0 disables)."
+        ),
+    )
+    parser.add_argument(
+        "--fix-read-groups",
+        action="store_true",
+        help=(
+            "Add an @RG line (ID and SM set to the sample ID) in place to existing BAMs "
+            "that lack one, using `samtools addreplacerg`, before variant calling."
+        ),
+    )
+    parser.add_argument(
+        "--force-variants",
+        action="store_true",
+        help=(
+            "Re-run bcftools mpileup/call/filter and everything downstream even if the "
+            "VCFs exist. Alignments and reference indices are kept."
+        ),
+    )
+    parser.add_argument(
+        "--force-plink",
+        action="store_true",
+        help="Re-run the PLINK subset, conversion, PCA, IBS, and figure from the existing filtered VCF.",
+    )
+    parser.add_argument(
         "--force",
         action="store_true",
-        help="Re-run steps even if outputs already exist.",
+        help="Re-run every step, including alignment and reference indexing, even if outputs exist.",
     )
     return parser.parse_args()
 
@@ -273,6 +304,40 @@ def discover_samples(raw_dir: Path, skip_blanks: bool) -> List[Sample]:
     return samples
 
 
+def load_samples_from_sheet(sheet_path: Path, repo_root: Path, skip_blanks: bool) -> List[Sample]:
+    """Rebuild the sample list from a previous run's `sample_metadata.tsv`.
+
+    Used when `data/raw/` holds no FASTQs (for example on a machine restored from
+    the archived outputs). The FASTQ paths are carried along but need not exist;
+    alignment cannot be re-run in this mode.
+    """
+    sheet = pd.read_csv(sheet_path, sep="\t")
+    required = {"sample_id", "location", "r1", "r2"}
+    missing_cols = required - set(sheet.columns)
+    if missing_cols:
+        raise ValueError(f"{sheet_path} lacks columns: {', '.join(sorted(missing_cols))}")
+    samples: List[Sample] = []
+    for row in sheet.itertuples(index=False):
+        if skip_blanks and str(row.location).lower().startswith("blank"):
+            logging.info("Skipping blank/control sample %s", row.sample_id)
+            continue
+        samples.append(
+            Sample(
+                sample_id=str(row.sample_id),
+                location=str(row.location),
+                r1=repo_root / str(row.r1),
+                r2=repo_root / str(row.r2),
+            )
+        )
+    if not samples:
+        raise RuntimeError(f"No samples loaded from {sheet_path}.")
+    logging.info(
+        "Loaded %d samples across %d locations from %s.",
+        len(samples), len({s.location for s in samples}), sheet_path,
+    )
+    return samples
+
+
 def run_command(
     command: Iterable[str | Path] | str,
     *,
@@ -324,6 +389,130 @@ def bam_has_read_group(bam_path: Path, sample_id: str) -> bool:
     return False
 
 
+def add_read_group(bam_path: Path, sample_id: str, threads: int) -> None:
+    """Rewrite `bam_path` in place with an @RG line naming the sample, then re-index."""
+    tmp_bam = bam_path.with_name(bam_path.name + ".rg.tmp")
+    read_group = f"@RG\tID:{sample_id}\tSM:{sample_id}\tPL:ILLUMINA"
+    run_command(
+        [
+            "samtools", "addreplacerg",
+            "-@", str(max(1, threads)),
+            "-r", read_group,
+            "-m", "overwrite_all",
+            "-O", "BAM",
+            "-o", str(tmp_bam),
+            str(bam_path),
+        ]
+    )
+    tmp_bam.replace(bam_path)
+    run_command(["samtools", "index", "-@", str(max(1, threads)), str(bam_path)])
+
+
+def ensure_read_groups(
+    samples: List[Sample],
+    bam_paths: List[Path],
+    fix: bool,
+    workers: int,
+    threads_per_bam: int,
+) -> None:
+    """Check every BAM for an @RG line; add one (in parallel) when `fix` is set."""
+    missing = [
+        (sample, bam)
+        for sample, bam in zip(samples, bam_paths)
+        if not bam_has_read_group(bam, sample.sample_id)
+    ]
+    if not missing:
+        logging.info("All %d BAMs carry an @RG line with the sample ID.", len(bam_paths))
+        return
+    if not fix:
+        logging.warning(
+            "%d of %d BAMs have no @RG line; bcftools names such samples by file path. "
+            "Re-run with --fix-read-groups to add them in place.",
+            len(missing),
+            len(bam_paths),
+        )
+        return
+    logging.info("Adding read groups to %d BAMs with %d parallel workers.", len(missing), workers)
+    with ThreadPoolExecutor(max_workers=max(1, workers)) as pool:
+        list(
+            pool.map(
+                lambda pair: add_read_group(pair[1], pair[0].sample_id, threads_per_bam),
+                missing,
+            )
+        )
+
+
+def low_depth_samples(coverage_summary_path: Path, min_mean_depth: float) -> List[str]:
+    """Sample IDs whose mean depth in the coverage summary falls below the cutoff."""
+    if min_mean_depth <= 0 or not coverage_summary_path.exists():
+        return []
+    cov = pd.read_csv(coverage_summary_path, sep="\t")
+    if not {"sample_id", "meandepth"} <= set(cov.columns):
+        return []
+    low = cov.loc[cov["meandepth"] < min_mean_depth, ["sample_id", "meandepth"]]
+    for row in low.itertuples(index=False):
+        logging.warning(
+            "Excluding %s from PCA/IBS: mean depth %.2fx is below --min-mean-depth %.2fx.",
+            row.sample_id, row.meandepth, min_mean_depth,
+        )
+    return [str(sid) for sid in low["sample_id"]]
+
+
+def vcf_sample_names(vcf_path: Path) -> List[str]:
+    """Return the sample names in a VCF header, in order."""
+    result = run_command(["bcftools", "query", "-l", str(vcf_path)], capture_output=True)
+    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+
+def map_vcf_sample_names(names: Iterable[str], known_ids: Iterable[str]) -> Dict[str, str]:
+    """Map path-style VCF sample names (from BAMs without read groups) to sample IDs.
+
+    Only names that are not already known IDs and whose basename, minus
+    `.sorted.bam`/`.bam`, is a known ID are included.
+    """
+    known = set(known_ids)
+    mapping: Dict[str, str] = {}
+    for name in names:
+        if name in known:
+            continue
+        base = Path(name).name
+        for suffix in (".sorted.bam", ".bam"):
+            if base.endswith(suffix):
+                base = base[: -len(suffix)]
+                break
+        if base in known:
+            mapping[name] = base
+    return mapping
+
+
+def rename_vcf_samples(vcf_path: Path, samples: List[Sample], threads: int) -> bool:
+    """Rename path-style sample names in `vcf_path` to sample IDs, in place.
+
+    Returns True if the file was rewritten (so downstream PLINK outputs, which
+    carry the old names, must be regenerated).
+    """
+    names = vcf_sample_names(vcf_path)
+    mapping = map_vcf_sample_names(names, (s.sample_id for s in samples))
+    if not mapping:
+        return False
+    known = {s.sample_id for s in samples}
+    unmapped = [n for n in names if n not in known and n not in mapping]
+    if unmapped:
+        logging.warning("%d VCF sample names could not be mapped to sample IDs: %s", len(unmapped), unmapped[:5])
+    map_file = vcf_path.with_name(vcf_path.name + ".sample_rename.txt")
+    map_file.write_text("".join(f"{old} {new}\n" for old, new in mapping.items()))
+    renamed = vcf_path.with_name(vcf_path.name.replace(".vcf.gz", ".renamed.vcf.gz"))
+    logging.info("Renaming %d path-style sample names in %s to sample IDs.", len(mapping), vcf_path.name)
+    run_command(["bcftools", "reheader", "--threads", str(threads), "-s", str(map_file), "-o", str(renamed), str(vcf_path)])
+    renamed.replace(vcf_path)
+    for ext in (".csi", ".tbi"):
+        idx = vcf_path.with_name(vcf_path.name + ext)
+        if idx.exists():
+            idx.unlink()
+    run_command(["bcftools", "index", "--threads", str(threads), str(vcf_path)])
+    return True
+
+
 def align_sample(
     sample: Sample,
     reference_fasta: Path,
@@ -337,13 +526,6 @@ def align_sample(
     bam_path = align_dir / f"{sample.sample_id}.sorted.bam"
     if bam_path.exists() and not force:
         logging.info("Alignment already exists for %s; skipping.", sample.sample_id)
-        if not bam_has_read_group(bam_path, sample.sample_id):
-            logging.warning(
-                "%s has no @RG line with SM:%s; bcftools will name this sample by its "
-                "file path. Re-run with --force or add one with `samtools addreplacerg`.",
-                bam_path.name,
-                sample.sample_id,
-            )
         return bam_path
 
     threads = max(1, threads_per_sample)
@@ -514,8 +696,13 @@ def run_plink_pca(
     plink_min_contig_length: int,
     plink_max_contigs: int,
     use_plink2: bool,
+    keep_ids: Optional[List[str]] = None,
 ) -> Tuple[Path, Path]:
-    """Convert VCF to PLINK format and compute PCA + IBS matrices."""
+    """Convert VCF to PLINK format and compute PCA + IBS matrices.
+
+    `keep_ids`, when given, restricts PCA/IBS to those sample IDs via `--keep`
+    (used to drop blanks and other undiscovered samples from an existing VCF).
+    """
     prefix = variant_dir / "plink_dataset"
     pca_prefix = variant_dir / "pca"
     ibs_prefix = variant_dir / "ibs"
@@ -606,10 +793,18 @@ def run_plink_pca(
         ]
         run_command(convert_cmd, cwd=variant_dir)
 
+        keep_args: List[str] = []
+        if keep_ids:
+            keep_file = variant_dir / "plink_keep.txt"
+            keep_file.write_text("".join(f"{sid} {sid}\n" for sid in keep_ids))
+            keep_args = ["--keep", str(keep_file)]
+            logging.info("Restricting PLINK PCA/IBS to %d samples via --keep.", len(keep_ids))
+
         pca_cmd = [
             plink_bin,
             "--bfile",
             str(prefix),
+            *keep_args,
             "--allow-extra-chr",
             "--geno",
             "0.5",
@@ -629,6 +824,7 @@ def run_plink_pca(
             plink_bin,
             "--bfile",
             str(prefix),
+            *keep_args,
             "--allow-extra-chr",
             "--geno",
             "0.5",
@@ -793,8 +989,19 @@ def main() -> None:
         raw_dir = args.raw_dir if args.raw_dir.is_absolute() else repo_root / args.raw_dir
         genome_fasta = args.genome_fasta if args.genome_fasta.is_absolute() else repo_root / args.genome_fasta
 
-        samples = discover_samples(raw_dir, skip_blanks=args.skip_blanks)
-        write_sample_sheet(samples, metrics_dir / "sample_metadata.tsv", repo_root)
+        sample_sheet_path = metrics_dir / "sample_metadata.tsv"
+        try:
+            samples = discover_samples(raw_dir, skip_blanks=args.skip_blanks)
+            write_sample_sheet(samples, sample_sheet_path, repo_root)
+        except FileNotFoundError:
+            if not sample_sheet_path.exists():
+                raise
+            logging.warning(
+                "No FASTQs found in %s; loading samples from %s instead. "
+                "Alignment cannot be re-run without the raw reads.",
+                raw_dir, sample_sheet_path,
+            )
+            samples = load_samples_from_sheet(sample_sheet_path, repo_root, args.skip_blanks)
 
         total_threads = max(1, min(args.threads, 50))
         threads_per_sample = max(1, min(args.threads_per_sample, total_threads))
@@ -812,10 +1019,14 @@ def main() -> None:
         
         # Check if we can skip coverage calculation
         if coverage_summary_path.exists() and not args.force:
-            logging.info("Coverage summary exists; skipping coverage calculation.")
-            # Still need to collect BAM paths for variant calling
+            logging.info("Coverage summary exists; skipping alignment and coverage calculation.")
             for sample in samples:
                 bam_path = align_dir / f"{sample.sample_id}.sorted.bam"
+                if not bam_path.exists():
+                    raise FileNotFoundError(
+                        f"{bam_path} not found although coverage summary exists; "
+                        "delete metrics/coverage_summary.tsv or re-run with --force to align."
+                    )
                 bam_paths.append(bam_path)
         else:
             for sample in samples:
@@ -835,6 +1046,15 @@ def main() -> None:
 
             write_table(coverage_records, coverage_summary_path)
 
+        ensure_read_groups(
+            samples,
+            bam_paths,
+            fix=args.fix_read_groups,
+            workers=max(1, total_threads // threads_per_sample),
+            threads_per_bam=threads_per_sample,
+        )
+
+        force_variants = args.force or args.force_variants
         raw_vcf, filtered_vcf = call_variants(
             bam_paths,
             reference_fasta,
@@ -843,17 +1063,32 @@ def main() -> None:
             max_depth=args.max_depth,
             min_total_depth=args.min_total_depth,
             min_qual=args.min_qual,
-            force=args.force,
+            force=force_variants,
         )
+
+        # VCFs built from BAMs without read groups carry file paths as sample
+        # names; rewrite the header so PLINK and the figure use sample IDs.
+        renamed = rename_vcf_samples(filtered_vcf, samples, threads=total_threads)
+        vcf_names = set(vcf_sample_names(filtered_vcf))
+        excluded = set(low_depth_samples(coverage_summary_path, args.min_mean_depth))
+        keep_ids = [
+            s.sample_id for s in samples if s.sample_id in vcf_names and s.sample_id not in excluded
+        ]
+        if not keep_ids:
+            logging.warning("No VCF sample names match discovered sample IDs; figure labels may be wrong.")
+            keep_ids = None
+        elif len(keep_ids) == len(vcf_names):
+            keep_ids = None  # nothing to drop
 
         eigenvec_path, ibs_matrix_path = run_plink_pca(
             filtered_vcf,
             variant_dir,
             threads=total_threads,
-            force=args.force,
+            force=force_variants or args.force_plink or renamed,
             plink_min_contig_length=args.plink_min_contig_length,
             plink_max_contigs=args.plink_max_contigs,
             use_plink2=args.plink2,
+            keep_ids=keep_ids,
         )
 
         figure_path = generate_visualization(
@@ -876,6 +1111,11 @@ def main() -> None:
                 "min_total_depth": args.min_total_depth,
                 "min_qual": args.min_qual,
                 "skip_blanks": args.skip_blanks,
+                "min_mean_depth": args.min_mean_depth,
+                "excluded_low_depth_samples": sorted(excluded),
+                "fix_read_groups": args.fix_read_groups,
+                "force_variants": args.force_variants,
+                "force_plink": args.force_plink,
                 "force": args.force,
             },
             outputs={
