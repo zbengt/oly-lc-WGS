@@ -1,0 +1,48 @@
+{
+  "script": "09_rda_genotypes.py reduce",
+  "date": "2026-10-03T11:48:19.390093+00:00",
+  "runtime_seconds": 383.1,
+  "parameters": {
+    "min_maf": 0.05,
+    "threads": 16,
+    "save_sets": [
+      "env"
+    ],
+    "individual_set": "env"
+  },
+  "inputs": [
+    "output/06_angsd_structure/samples/samples.tsv",
+    "output/09_rda/inputs/population-sets.tsv",
+    "output/06_angsd_structure/gl/[0-9][0-9][0-9]_*.beagle.gz"
+  ],
+  "n_windows": 44,
+  "n_snp_input": 7418858,
+  "sets": {
+    "env": {
+      "n_units": 14,
+      "n_snp": 7263864,
+      "rank": 13
+    },
+    "all": {
+      "n_units": 15,
+      "n_snp": 7373591,
+      "rank": 14
+    },
+    "env_merge_fidalgo": {
+      "n_units": 13,
+      "n_snp": 7269414,
+      "rank": 12
+    },
+    "individual": {
+      "set": "env",
+      "n_individuals": 102,
+      "n_snp": 7418858,
+      "rank": 101
+    }
+  },
+  "software": {
+    "python": "3.13.15",
+    "numpy": "2.5.3",
+    "pandas": "3.0.6"
+  }
+}

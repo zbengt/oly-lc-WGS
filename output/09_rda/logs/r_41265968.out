@@ -1,0 +1,36 @@
+start 2026-10-03T12:53:37Z host n3346 chunks: figures metadata
+null device 
+          1 
+null device 
+          1 
+{
+  "script": "09_rda.Rmd",
+  "date": "2026-10-03T12:53:48Z",
+  "runtime_seconds": 502.5,
+  "parameters": {
+    "predictors": ["temp_summer_mean", "sal_range", "chl_summer_mean"],
+    "geography": "dbMEM 1-2 (step 08)",
+    "structure": "population means of PCAngsd PC1 and PC2 (step 06)",
+    "permutations": 999,
+    "seed": 42,
+    "min_maf": 0.05,
+    "allele_frequencies": "EM on genotype likelihoods per population (ANGSD Beagle, step 06)",
+    "individual_dosages": "posterior mean under HWE at the all-sample frequency",
+    "outlier_test": "robust (MCD) Mahalanobis on constrained-axis loadings, median-rescaled chi-square, BH q-values",
+    "slurm": {
+      "account": "coenv",
+      "python_jobs": "cpu-g2",
+      "r_jobs": "compute"
+    },
+    "container": "/mmfs1/gscratch/srlab/containers/srlab-R4.4-bioinformatics-container-46b5d9e.sif"
+  },
+  "inputs": ["output/06_angsd_structure/gl/NNN_*.beagle.gz", "output/06_angsd_structure/samples/samples.tsv", "output/06_angsd_structure/tables/pca_scores.tsv", "output/08_environmental_predictors/tables/site-env-matrix.tsv"],
+  "sets": {
+    "env": {
+      "n_units": 14,
+      "n_snp": 7263864,
+      "rank": 13
+    },
+    "all": {
+      "n_units": 15,
+end 2026-10-03T12:53:48Z

@@ -54,7 +54,7 @@ Rscript -e 'rmarkdown::render("code/05_realign_xbOstLuri2.Rmd")'   # or run its 
 Rscript -e 'rmarkdown::render("code/06_angsd_structure.Rmd")'      # submits SLURM jobs; rerun R chunks when done
 python code/07_orca_ecology_data.py --start-year 2015 --end-year 2018
 python code/08_environmental_predictors.py
-Rscript -e 'rmarkdown::render("code/09_rda.Rmd")'                 # submits SLURM jobs; rerun R chunks when done
+# code/09_rda.Rmd: on klone run its bash chunks in order from a shell; R chunks run as SLURM jobs in the lab R container
 ```
 
 All outputs are written with relative paths so results remain reproducible across

@@ -47,7 +47,17 @@ Inputs and outputs:
   gitignored), `tables/`, `figures/`, `logs/`, `metadata.json`
 
 The Python jobs use the step 06 `angsd` conda env (numpy and pandas only). The
-R chunks need `vegan` (`install.packages("vegan")`).
+R chunks need `vegan` and `jsonlite`.
+
+**Running on klone.** R is not on the klone PATH, and the Roberts Lab R
+container has no `sbatch`, so the Rmd cannot be knitted top to bottom there.
+Run the bash chunks in order from a shell on the host. Each R chunk is
+`eval = FALSE` and is run by the `*-job` bash chunk before it: that chunk
+extracts the R chunk from this file and runs it as a SLURM job in the
+container (`r_job.sh`, written by the `r-job` chunk), with single-threaded
+OpenBLAS (the container default oversubscribes and makes the permutation fits
+about 30x slower). Elsewhere, with R and vegan installed, the R chunks run
+as-is in RStudio.
 
 ```{r setup, include=FALSE}
 # Paths are relative to code/, so chunks work the same run one at a time or knitted
@@ -62,6 +72,47 @@ mkdir -p ../output/09_rda/{inputs,work,tables,figures,logs,tmp}
 ls ../output/09_rda
 ```
 
+# R chunk runner
+
+Writes `output/09_rda/tmp/r_job.sh`, a SLURM script that runs the named R
+chunks of this file, in the order given, in the R container. The jobs are
+short (under a minute each) and go to the coenv `compute` node; the `*-job`
+chunks submit with `--wait` so the next step can follow directly.
+
+```{bash r-job}
+set -euo pipefail
+repo=$(cd .. && pwd)
+out=output/09_rda
+container=/mmfs1/gscratch/srlab/containers/srlab-R4.4-bioinformatics-container-46b5d9e.sif
+
+cat > ${repo}/${out}/tmp/r_job.sh <<EOF
+#!/bin/bash
+#SBATCH --job-name=oly-rda-r
+#SBATCH --account=coenv
+#SBATCH --partition=compute
+#SBATCH --cpus-per-task=2
+#SBATCH --mem=16G
+#SBATCH --time=2:00:00
+#SBATCH --output=${repo}/${out}/logs/r_%j.out
+#SBATCH --chdir=${repo}/code
+# usage: sbatch --wait ${out}/tmp/r_job.sh <chunk-label> [<chunk-label> ...]
+set -euo pipefail
+export OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
+script=${repo}/${out}/tmp/r_job_\${SLURM_JOB_ID}.R
+: > "\${script}"
+for label in "\$@"; do
+  awk -v label="\${label}" '\$0 ~ "^\`\`\`[{]r " label "[,}]" {f = 1; next} f && /^\`\`\`\$/ {exit} f' 09_rda.Rmd > "\${script}.part"
+  [[ -s "\${script}.part" ]] || { echo "no R chunk labelled \${label}" >&2; exit 1; }
+  cat "\${script}.part" >> "\${script}"
+done
+rm -f "\${script}.part"
+echo "start \$(date -u +%FT%TZ) host \$(hostname) chunks: \$*"
+apptainer exec ${container} Rscript "\${script}"
+echo "end \$(date -u +%FT%TZ)"
+EOF
+echo "wrote ${out}/tmp/r_job.sh"
+```
+
 # Population sets
 
 Each set is a list of units (populations) for one response matrix. `env` is
@@ -70,7 +121,14 @@ every site, for the temperature-only models; `env_merge_fidalgo` pools the
 individuals of the two Fidalgo Bay collections, which share coordinates and an
 Ecology station.
 
-```{r population-sets}
+```{bash population-sets-job}
+set -euo pipefail
+cd ..
+sbatch --wait output/09_rda/tmp/r_job.sh population-sets
+tail -n +2 output/09_rda/inputs/population-sets.tsv | cut -f1 | sort | uniq -c
+```
+
+```{r population-sets, eval = FALSE}
 out <- "../output/09_rda"
 site <- read.delim("../output/08_environmental_predictors/tables/site-env-matrix.tsv", stringsAsFactors = FALSE)
 samples <- read.delim("../output/06_angsd_structure/samples/samples.tsv", stringsAsFactors = FALSE)
@@ -149,9 +207,19 @@ grep -l -E "Error|error|Killed|OOM|No space" ${out}/logs/*.out 2>/dev/null | hea
 
 Population-level models on the `env` set, the temperature-only models on `all`,
 the individual-level tests, and the pooled-Fidalgo refit. Writes the
-constrained-axis unit scores that the scan job projects SNPs onto.
+constrained-axis unit scores that the scan job projects SNPs onto. Takes about
+a minute as a job; most of it is the 999 site-level permutations of the
+individual-level models.
 
-```{r rda-models}
+```{bash rda-models-job}
+set -euo pipefail
+cd ..
+sbatch --wait output/09_rda/tmp/r_job.sh rda-models
+log=$(ls -t output/09_rda/logs/r_*.out | head -1)
+grep -v "^WARNING" "${log}"
+```
+
+```{r rda-models, eval = FALSE}
 suppressPackageStartupMessages(library(vegan))
 set.seed(42)
 out <- "../output/09_rda"
@@ -365,7 +433,19 @@ echo "submitted scan job ${jid}"
 
 # Figures
 
-```{r figures}
+Run after the scan job has finished (the Manhattan plot reads its thinned
+p-values). One job draws the figures and then writes the metadata.
+
+```{bash figures-job}
+set -euo pipefail
+cd ..
+sbatch --wait output/09_rda/tmp/r_job.sh figures metadata
+log=$(ls -t output/09_rda/logs/r_*.out | head -1)
+grep -v "^WARNING" "${log}" | tail -5
+ls -l output/09_rda/figures
+```
+
+```{r figures, eval = FALSE}
 out <- "../output/09_rda"
 vp <- read.delim(file.path(out, "tables/variance-partition.tsv"), stringsAsFactors = FALSE)
 us <- read.delim(file.path(out, "tables/rda-unit-scores.tsv"), stringsAsFactors = FALSE)
@@ -392,10 +472,33 @@ lim <- range(c(us$RDA1, us$RDA2, bp$RDA1, bp$RDA2)) * 1.2
 plot(us$RDA1, us$RDA2, pch = 16, col = pal[us$region], xlim = lim, ylim = lim, asp = 1,
      xlab = sprintf("RDA1 (%.1f%% of total)", 100 * eig$prop_total[1]),
      ylab = sprintf("RDA2 (%.1f%% of total)", 100 * eig$prop_total[2]), main = "Environment-only RDA")
-text(us$RDA1, us$RDA2, us$unit, pos = 3, cex = 0.55)
 s <- 0.9 * max(abs(c(us$RDA1, us$RDA2))) / max(abs(c(bp$RDA1, bp$RDA2)))
 arrows(0, 0, s * bp$RDA1, s * bp$RDA2, length = 0.08, col = "firebrick")
-text(1.1 * s * bp$RDA1, 1.1 * s * bp$RDA2, bp$term, col = "firebrick", cex = 0.7)
+# Site and predictor labels share one pass that pushes overlapping labels apart
+# vertically (the Central Puget Sound sites and the chlorophyll arrow tip
+# coincide); a moved label gets a grey leader line back to its anchor.
+repel_text <- function(x, y, labels, cex, col, iter = 500) {
+  w <- mapply(function(l, k) strwidth(l, cex = k), labels, cex) * 1.1
+  h <- mapply(function(l, k) strheight(l, cex = k), labels, cex) * 1.8
+  ly <- y + h * 0.8
+  for (k in seq_len(iter)) {
+    moved <- FALSE
+    for (i in seq_along(x)) for (j in seq_along(x)) if (i < j) {
+      ox <- (w[i] + w[j]) / 2 - abs(x[j] - x[i]); oy <- (h[i] + h[j]) / 2 - abs(ly[j] - ly[i])
+      if (ox > 0 && oy > 0) {
+        d <- if (ly[j] >= ly[i]) 1 else -1
+        ly[i] <- ly[i] - d * (oy / 2 + 1e-6); ly[j] <- ly[j] + d * (oy / 2 + 1e-6); moved <- TRUE
+      }
+    }
+    if (!moved) break
+  }
+  lead <- abs(ly - y) > 1.2 * h
+  segments(x[lead], y[lead], x[lead], ly[lead] - sign(ly[lead] - y[lead]) * h[lead] / 3, col = "grey60", lwd = 0.6)
+  text(x, ly, labels, cex = cex, col = col)
+}
+repel_text(c(us$RDA1, 1.1 * s * bp$RDA1), c(us$RDA2, 1.1 * s * bp$RDA2), c(us$unit, bp$term),
+           cex = rep(c(0.55, 0.7), c(nrow(us), nrow(bp))),
+           col = rep(c("black", "firebrick"), c(nrow(us), nrow(bp))))
 legend("bottomleft", legend = regions, col = pal, pch = 16, cex = 0.6, bty = "n")
 abline(h = 0, v = 0, lty = 3)
 
@@ -439,7 +542,7 @@ if (file.exists(mf)) {
 
 # Metadata
 
-```{r metadata}
+```{r metadata, eval = FALSE}
 out <- "../output/09_rda"
 repo_rel <- function(p) sub("^\\.\\./", "", p)
 reduce_meta <- jsonlite::fromJSON(file.path(out, "inputs/reduce-metadata.json"))
@@ -455,7 +558,8 @@ metadata <- list(
     min_maf = reduce_meta$parameters$min_maf, allele_frequencies = "EM on genotype likelihoods per population (ANGSD Beagle, step 06)",
     individual_dosages = "posterior mean under HWE at the all-sample frequency",
     outlier_test = "robust (MCD) Mahalanobis on constrained-axis loadings, median-rescaled chi-square, BH q-values",
-    slurm = list(account = "coenv", partition = "cpu-g2")
+    slurm = list(account = "coenv", python_jobs = "cpu-g2", r_jobs = "compute"),
+    container = "/mmfs1/gscratch/srlab/containers/srlab-R4.4-bioinformatics-container-46b5d9e.sif"
   ),
   inputs = c("output/06_angsd_structure/gl/NNN_*.beagle.gz", "output/06_angsd_structure/samples/samples.tsv",
              "output/06_angsd_structure/tables/pca_scores.tsv",

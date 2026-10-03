@@ -1,0 +1,72 @@
+{
+  "script": "09_rda.Rmd",
+  "date": "2026-10-03T12:53:48Z",
+  "runtime_seconds": 502.5,
+  "parameters": {
+    "predictors": ["temp_summer_mean", "sal_range", "chl_summer_mean"],
+    "geography": "dbMEM 1-2 (step 08)",
+    "structure": "population means of PCAngsd PC1 and PC2 (step 06)",
+    "permutations": 999,
+    "seed": 42,
+    "min_maf": 0.05,
+    "allele_frequencies": "EM on genotype likelihoods per population (ANGSD Beagle, step 06)",
+    "individual_dosages": "posterior mean under HWE at the all-sample frequency",
+    "outlier_test": "robust (MCD) Mahalanobis on constrained-axis loadings, median-rescaled chi-square, BH q-values",
+    "slurm": {
+      "account": "coenv",
+      "python_jobs": "cpu-g2",
+      "r_jobs": "compute"
+    },
+    "container": "/mmfs1/gscratch/srlab/containers/srlab-R4.4-bioinformatics-container-46b5d9e.sif"
+  },
+  "inputs": ["output/06_angsd_structure/gl/NNN_*.beagle.gz", "output/06_angsd_structure/samples/samples.tsv", "output/06_angsd_structure/tables/pca_scores.tsv", "output/08_environmental_predictors/tables/site-env-matrix.tsv"],
+  "sets": {
+    "env": {
+      "n_units": 14,
+      "n_snp": 7263864,
+      "rank": 13
+    },
+    "all": {
+      "n_units": 15,
+      "n_snp": 7373591,
+      "rank": 14
+    },
+    "env_merge_fidalgo": {
+      "n_units": 13,
+      "n_snp": 7269414,
+      "rank": 12
+    },
+    "individual": {
+      "set": "env",
+      "n_individuals": 102,
+      "n_snp": 7418858,
+      "rank": 101
+    }
+  },
+  "outlier_scan": {
+    "set": "env",
+    "n_axes": 3,
+    "n_snp": 7263864,
+    "n_q_lt_0.05": 0,
+    "n_q_lt_0.10": 0,
+    "n_q_lt_0.20": 0,
+    "min_q": 0.9797,
+    "median_p": 0.5,
+    "inflation": 2.3541,
+    "mcd_subsample": 50000
+  },
+  "software": {
+    "R": "R version 4.4.3 (2025-02-28)",
+    "vegan": "2.7.5",
+    "python": {
+      "python": "3.13.15",
+      "numpy": "2.5.3",
+      "pandas": "3.0.6"
+    }
+  },
+  "outputs": {
+    "inputs": ["output/09_rda/inputs/all-pcoa.tsv", "output/09_rda/inputs/env-pcoa.tsv", "output/09_rda/inputs/env_merge_fidalgo-pcoa.tsv", "output/09_rda/inputs/individual-pcoa.tsv", "output/09_rda/inputs/population-sets.tsv", "output/09_rda/inputs/reduce-metadata.json"],
+    "tables": ["output/09_rda/tables/axis-unit-scores.tsv", "output/09_rda/tables/forward-selection.tsv", "output/09_rda/tables/individual-level-tests.tsv", "output/09_rda/tables/individual-permutation-null.tsv", "output/09_rda/tables/manhattan-thinned.tsv.gz", "output/09_rda/tables/outlier-summary.tsv", "output/09_rda/tables/outlier-top-loci.tsv", "output/09_rda/tables/rda-biplot-scores.tsv", "output/09_rda/tables/rda-eigenvalues.tsv", "output/09_rda/tables/rda-unit-scores.tsv", "output/09_rda/tables/sensitivity-refits.tsv", "output/09_rda/tables/significance-tests.tsv", "output/09_rda/tables/snps-per-window.tsv", "output/09_rda/tables/temperature-only-models.tsv", "output/09_rda/tables/variance-partition.tsv", "output/09_rda/tables/vif.tsv"],
+    "figures": ["output/09_rda/figures/outlier-manhattan.png", "output/09_rda/figures/rda-summary.png"]
+  }
+}

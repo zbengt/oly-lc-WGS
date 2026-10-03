@@ -1,0 +1,31 @@
+start 2026-10-03T12:52:20Z host n3029 chunks: rda-models
+     model                           component        r2       r2_adj
+1      env                         environment 0.2535458  0.029609483
+2      geo                   geography (dbMEM) 0.2068565  0.062648605
+3      str               structure (PC1 + PC2) 0.2725537  0.140290727
+4  env_geo             environment | geography 0.1991950 -0.027814834
+5  env_str             environment | structure 0.2018395  0.005598197
+6 env_both environment | geography + structure 0.1858397 -0.014451875
+7     full                          full model 0.6083104  0.151339213
+      model  scope        term df variance         F     p
+1       env global constrained  3  1841722 1.1322228 0.164
+10      geo global constrained  2  1502578 1.4344325 0.003
+17      str global constrained  2  1979793 2.0606955 0.001
+24  env_geo global constrained  3  1446926 0.8943314 0.915
+33  env_str global constrained  3  1466135 1.0240329 0.357
+42 env_both global constrained  3  1349914 0.9489129 0.833
+                            model             permutation n_individuals
+env                           env             among sites           102
+env_geo                   env_geo             among sites           102
+temp_summer_mean temp_summer_mean             among sites           102
+sal_range               sal_range             among sites           102
+chl_summer_mean   chl_summer_mean             among sites           102
+free                          env free (pseudoreplicated)           102
+                      r2_adj        F     p
+env              0.017744469 1.608189 0.099
+env_geo          0.005559308 1.187974 0.698
+temp_summer_mean 0.003072633 1.311292 0.425
+sal_range        0.010719147 2.094365 0.055
+chl_summer_mean  0.001000549 1.101157 0.718
+free             0.017744469 1.608189 0.001
+end 2026-10-03T12:53:20Z
