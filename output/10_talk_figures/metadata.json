@@ -1,0 +1,45 @@
+{
+  "script": "code/10_talk_figures.py",
+  "date": "2026-10-03T19:23:50+00:00",
+  "runtime_seconds": 3.0,
+  "parameters": {
+    "force": true,
+    "dpi": 200,
+    "base_font_pt": 18
+  },
+  "inputs": {
+    "land": "output/05_site_map/cache/ne_10m_land.geojson",
+    "sites": "output/05_site_map/tables/site_coordinates.tsv",
+    "depth": "output/05_realign_xbOstLuri2/metrics/comparison_v081.tsv",
+    "pca_scores": "output/06_angsd_structure/tables/pca_scores.tsv",
+    "pca_variance": "output/06_angsd_structure/tables/pca_variance.tsv",
+    "admix_k2": "output/06_angsd_structure/tables/admixture_K2.tsv",
+    "admix_k3": "output/06_angsd_structure/tables/admixture_K3.tsv",
+    "fst": "output/06_angsd_structure/tables/fst_matrix.tsv",
+    "env": "output/08_environmental_predictors/tables/site-env-matrix.tsv",
+    "rda_units": "output/09_rda/tables/rda-unit-scores.tsv",
+    "rda_biplot": "output/09_rda/tables/rda-biplot-scores.tsv",
+    "rda_eigen": "output/09_rda/tables/rda-eigenvalues.tsv",
+    "ind_null": "output/09_rda/tables/individual-permutation-null.tsv",
+    "ind_tests": "output/09_rda/tables/individual-level-tests.tsv"
+  },
+  "software": {
+    "python": "3.8.5",
+    "numpy": "1.19.2",
+    "pandas": "1.1.3",
+    "matplotlib": "3.3.2"
+  },
+  "outputs": {
+    "figures": [
+      "output/10_talk_figures/figures/site_map.png",
+      "output/10_talk_figures/figures/depth.png",
+      "output/10_talk_figures/figures/pca.png",
+      "output/10_talk_figures/figures/admixture.png",
+      "output/10_talk_figures/figures/fst.png",
+      "output/10_talk_figures/figures/env_space.png",
+      "output/10_talk_figures/figures/rda_biplot.png",
+      "output/10_talk_figures/figures/null.png"
+    ],
+    "log": "output/10_talk_figures/logs/pipeline.log"
+  }
+}

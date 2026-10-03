@@ -9,7 +9,7 @@ step-matched subdirectories under `output/`.
 
 | Path | Contents |
 | --- | --- |
-| `code/` | Analysis scripts run in numeric order (`01_` → `04_`) |
+| `code/` | Analysis scripts run in numeric order (`01_` → `10_`) |
 | `data/` | Raw reads and reference assets used as read-only inputs |
 | `output/` | Generated alignments, tables, figures, logs, and metadata |
 | `INSTRUCTIONS.md` | Project execution conventions for agents and contributors |
@@ -30,6 +30,7 @@ Additional details for each analysis step are documented in
 | 7 | `code/07_orca_ecology_data.py` | Site-level 2015–2018 marine climatologies (0–5 m temperature, salinity, oxygen, chlorophyll) from WA Ecology CTD profiles and ORCA moorings, as predictors for genotype-environment analyses | `output/07_orca_ecology_data/tables/site_predictors_ecology.tsv`, `figures/` |
 | 8 | `code/08_environmental_predictors.py` | RDA predictor matrix from the step 07 climatologies: Coos Bay temperature from NOAA CO-OPS, dbMEM geography, collinearity and VIF screen of candidate predictors | `output/08_environmental_predictors/tables/site-env-matrix.tsv`, `figures/` |
 | 9 | `code/09_rda.Rmd` (+ `code/09_rda_genotypes.py`) | Genotype-environment RDA: per-population allele frequencies from the step 06 genotype likelihoods, variance partitioning, permutation tests, temperature-only and individual-level models, and an outlier scan | `output/09_rda/tables/`, `figures/` |
+| 10 | `code/10_talk_figures.py` | Slide-ready versions of the main step 05-09 figures: large text, plain site names, one region colour scheme | `output/10_talk_figures/figures/` |
 
 ## Requirements
 
@@ -55,6 +56,7 @@ Rscript -e 'rmarkdown::render("code/06_angsd_structure.Rmd")'      # submits SLU
 python code/07_orca_ecology_data.py --start-year 2015 --end-year 2018
 python code/08_environmental_predictors.py
 # code/09_rda.Rmd: on klone run its bash chunks in order from a shell; R chunks run as SLURM jobs in the lab R container
+python code/10_talk_figures.py --force
 ```
 
 All outputs are written with relative paths so results remain reproducible across

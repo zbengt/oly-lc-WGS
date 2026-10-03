@@ -306,3 +306,30 @@ ported from the earlier Olurida_v081 analysis to the step 06 genotype likelihood
     only to show how much pseudoreplication inflates significance.
   - Outliers: robust (MCD) Mahalanobis distance on the constrained-axis loadings, median-rescaled
     against chi-square, Benjamini-Hochberg q-values.
+
+## 10_talk_figures.py
+
+Slide-ready versions of the main step 05-09 figures, redrawn from the committed tables with large text,
+plain site names and one region colour scheme.
+
+- **Inputs**
+  - `output/05_site_map/cache/ne_10m_land.geojson`, `output/05_site_map/tables/site_coordinates.tsv`
+  - `output/05_realign_xbOstLuri2/metrics/comparison_v081.tsv`
+  - `output/06_angsd_structure/tables/pca_scores.tsv`, `pca_variance.tsv`, `admixture_K2.tsv`, `admixture_K3.tsv`, `fst_matrix.tsv`
+  - `output/08_environmental_predictors/tables/site-env-matrix.tsv`
+  - `output/09_rda/tables/rda-unit-scores.tsv`, `rda-biplot-scores.tsv`, `rda-eigenvalues.tsv`,
+    `individual-permutation-null.tsv`, `individual-level-tests.tsv`
+- **Execution**
+  - `python code/10_talk_figures.py [--force]` from the repository root; needs only numpy, pandas and matplotlib.
+  - Existing figures are skipped unless `--force` is given.
+- **Outputs**
+  - `figures/site_map.png`, `depth.png`, `pca.png`, `admixture.png` (K = 2, 3), `fst.png`, `env_space.png`,
+    `rda_biplot.png`, `null.png`
+  - `metadata.json`, `logs/pipeline.log`
+- **Notes**
+  - Figure sizes are in hundreds of slide pixels (`figsize=(10.4, 6.48)` fills a 1040 x 648 px box on a
+    1920 x 1080 slide); saved at 200 dpi with an 18 pt base font, so text lands at about 24 px or more.
+  - Sites are ordered geographically (outer coast, South, Central, Hood Canal, Strait, North Sound) and
+    coloured by region with the Okabe-Ito palette. Label positions are hand-tuned offsets in data units;
+    check the figures if site scores or coordinates change.
+  - Percentages and p-values printed on the figures are read from the step 06 and 09 tables, not hard-coded.
