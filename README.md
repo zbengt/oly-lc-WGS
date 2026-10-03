@@ -9,7 +9,7 @@ step-matched subdirectories under `output/`.
 
 | Path | Contents |
 | --- | --- |
-| `code/` | Analysis scripts run in numeric order (`01_` → `10_`) |
+| `code/` | Analysis scripts run in numeric order (`01_` → `11_`) |
 | `data/` | Raw reads and reference assets used as read-only inputs |
 | `output/` | Generated alignments, tables, figures, logs, and metadata |
 | `INSTRUCTIONS.md` | Project execution conventions for agents and contributors |
@@ -31,12 +31,13 @@ Additional details for each analysis step are documented in
 | 8 | `code/08_environmental_predictors.py` | RDA predictor matrix from the step 07 climatologies: Coos Bay temperature from NOAA CO-OPS, dbMEM geography, collinearity and VIF screen of candidate predictors | `output/08_environmental_predictors/tables/site-env-matrix.tsv`, `figures/` |
 | 9 | `code/09_rda.Rmd` (+ `code/09_rda_genotypes.py`) | Genotype-environment RDA: per-population allele frequencies from the step 06 genotype likelihoods, variance partitioning, permutation tests, temperature-only and individual-level models, and an outlier scan | `output/09_rda/tables/`, `figures/` |
 | 10 | `code/10_talk_figures.py` | Slide-ready versions of the main step 05-09 figures: large text, plain site names, one region colour scheme | `output/10_talk_figures/figures/` |
+| 11 | `code/11_climatology_window_comparison.py` | Sensitivity of the site predictors to the climatology window: steps 07 and 08 rerun for 2021-2024 (`--output-dir`) and compared with 2015-2018 (correlation and rank changes per predictor, station changes) | `output/11_climatology_window_comparison/tables/`, `figures/` |
 
 ## Requirements
 
 Run commands from the repository root and keep `data/` read-only.
 
-- Python 3 with `numpy` and `pandas`
+- Python 3 with `numpy` and `pandas` (plus `h5py` and `matplotlib` for steps 07, 08 and 11)
 - `pysam` for `code/02_bam_summary.py`
 - External tools used by the workflows:
   - step 01: `bwa`, `samtools`, `bcftools`, `plink`
@@ -57,6 +58,9 @@ python code/07_orca_ecology_data.py --start-year 2015 --end-year 2018
 python code/08_environmental_predictors.py
 # code/09_rda.Rmd: on klone run its bash chunks in order from a shell; R chunks run as SLURM jobs in the lab R container
 python code/10_talk_figures.py --force
+python code/07_orca_ecology_data.py --start-year 2021 --end-year 2024 --output-dir output/07_orca_ecology_data_2021-2024
+python code/08_environmental_predictors.py --step07-dir output/07_orca_ecology_data_2021-2024 --output-dir output/08_environmental_predictors_2021-2024
+python code/11_climatology_window_comparison.py
 ```
 
 All outputs are written with relative paths so results remain reproducible across

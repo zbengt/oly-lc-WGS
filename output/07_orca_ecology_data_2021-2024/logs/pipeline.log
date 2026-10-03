@@ -1,0 +1,38 @@
+2026-10-03 12:33:01,157 INFO 15 sites, window 2021-2024, depth 0-5 m
+2026-10-03 12:33:01,159 INFO Downloading Ecology 2021 ...
+2026-10-03 12:33:05,322 INFO   Ecology 2021: 3592 observations within 5 m
+2026-10-03 12:33:05,322 INFO Downloading Ecology 2022 ...
+2026-10-03 12:33:08,585 INFO   Ecology 2022: 3032 observations within 5 m
+2026-10-03 12:33:08,586 INFO Downloading Ecology 2023 ...
+2026-10-03 12:33:11,569 INFO   Ecology 2023: 2478 observations within 5 m
+2026-10-03 12:33:11,569 INFO Downloading Ecology 2024 ...
+2026-10-03 12:33:14,695 INFO   Ecology 2024: 2645 observations within 5 m
+2026-10-03 12:33:15,209 INFO CS18_22_Wild_plate1: Ecology SIN001 at 7.7 km, 36 profiles (nearest)
+2026-10-03 12:33:15,210 INFO Coos_Bay: no Ecology station within 25 km with >= 12 profiles (nearest WPA007 at 346.5 km)
+2026-10-03 12:33:15,235 INFO Dogfish_Bay: Ecology SIN001 at 16.3 km, 36 profiles (override)
+2026-10-03 12:33:15,262 INFO FB18_Wild: Ecology RSR837 at 19.8 km, 38 profiles (nearest)
+2026-10-03 12:33:15,288 INFO Fidalgo_Bay: Ecology RSR837 at 19.8 km, 38 profiles (nearest)
+2026-10-03 12:33:15,314 INFO HC18_Triton_Wild: Ecology HCB003 at 8.0 km, 36 profiles (nearest)
+2026-10-03 12:33:15,340 INFO LS: Ecology OAK004 at 6.9 km, 38 profiles (nearest)
+2026-10-03 12:33:15,365 INFO MB: Ecology BUD005 at 4.9 km, 38 profiles (nearest)
+2026-10-03 12:33:15,391 INFO NS18_Disco_Wild: Ecology PTH005 at 10.2 km, 38 profiles (nearest)
+2026-10-03 12:33:15,416 INFO NS18_Sequim_Wild: Ecology ADM002 at 19.6 km, 39 profiles (nearest)
+2026-10-03 12:33:15,442 INFO Ostrich_Bay: Ecology SIN001 at 5.4 km, 36 profiles (nearest)
+2026-10-03 12:33:15,468 INFO PGB18_Wild: Ecology ADM003 at 8.0 km, 37 profiles (nearest)
+2026-10-03 12:33:15,493 INFO SS18_North_Bay_Wild: Ecology HCB007 at 7.7 km, 36 profiles (nearest)
+2026-10-03 12:33:15,520 INFO Squaxin_Island: Ecology DNA001 at 4.3 km, 38 profiles (nearest)
+2026-10-03 12:33:15,544 INFO WB: Ecology WPA006 at 2.8 km, 26 profiles (nearest)
+2026-10-03 12:33:15,546 INFO ORCA orca_hydro_twanoh (Twanoh, southern Hood Canal): 5 sites within 30 km
+2026-10-03 12:33:45,620 WARNING   ORCA orca_hydro_twanoh 2021: HTTP Error 503: Service Unavailable
+2026-10-03 12:33:45,624 INFO ORCA orca_hydro_hoodsport (Hoodsport, Hood Canal): 2 sites within 30 km
+2026-10-03 12:33:45,624 WARNING   skipped: ERDDAP returned server errors for the previous mooring
+2026-10-03 12:33:45,628 INFO ORCA orca_hydro_dabobbay (Dabob Bay, Hood Canal): 5 sites within 30 km
+2026-10-03 12:33:45,628 WARNING   skipped: ERDDAP returned server errors for the previous mooring
+2026-10-03 12:33:45,630 INFO ORCA orca_hydro_hansville (Hansville, northern Puget Sound): 3 sites within 30 km
+2026-10-03 12:33:45,630 WARNING   skipped: ERDDAP returned server errors for the previous mooring
+2026-10-03 12:33:45,632 INFO ORCA orca_hydro_pointwells (Point Wells, central Puget Sound): 4 sites within 30 km
+2026-10-03 12:33:45,632 WARNING   skipped: ERDDAP returned server errors for the previous mooring
+2026-10-03 12:33:45,634 INFO ORCA orca_hydro_carrinlet (Carr Inlet, southern Puget Sound): 4 sites within 30 km
+2026-10-03 12:33:45,634 WARNING   skipped: ERDDAP returned server errors for the previous mooring
+2026-10-03 12:33:48,567 INFO Wrote 15 sites (14 with an Ecology station; 0 with ORCA) to output/07_orca_ecology_data_2021-2024/
+2026-10-03 12:33:48,567 WARNING 6 ORCA requests failed or were skipped; rerun later to fill them in (cached years are not re-requested).

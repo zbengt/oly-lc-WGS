@@ -1,0 +1,59 @@
+{
+  "script": "11_climatology_window_comparison.py",
+  "inputs": [
+    "output/08_environmental_predictors/tables/site-env-matrix.tsv",
+    "output/08_environmental_predictors_2021-2024/tables/site-env-matrix.tsv",
+    "output/09_rda/inputs/collection-year.tsv"
+  ],
+  "parameters": {
+    "reference_window": "2015-2018",
+    "alternative_window": "2021-2024",
+    "selected_predictors": [
+      "temp_summer_mean",
+      "sal_range",
+      "chl_summer_mean"
+    ],
+    "agreement_sites": "reference in_env_model"
+  },
+  "results": {
+    "selected": {
+      "temp_summer_mean": {
+        "pearson_r": 0.9970554786656963,
+        "spearman_rho": 0.9955555555555554,
+        "mean_shift": -0.026928571428571097,
+        "max_abs_rank_change": 1
+      },
+      "sal_range": {
+        "pearson_r": 0.9145065303984962,
+        "spearman_rho": 0.8977777777777777,
+        "mean_shift": -0.3456428571428572,
+        "max_abs_rank_change": 6
+      },
+      "chl_summer_mean": {
+        "pearson_r": 0.9848290457583536,
+        "spearman_rho": 0.9333333333333331,
+        "mean_shift": -2.6885000000000003,
+        "max_abs_rank_change": 3
+      }
+    },
+    "stations_changed": [
+      "PGB18_Wild"
+    ],
+    "min_spearman_all_predictors": 0.3555555555555555,
+    "median_spearman_all_predictors": 0.8799999999999999
+  },
+  "produced_files": [
+    "output/11_climatology_window_comparison/tables/station-assignment.tsv",
+    "output/11_climatology_window_comparison/tables/site-values.tsv",
+    "output/11_climatology_window_comparison/tables/predictor-agreement.tsv",
+    "output/11_climatology_window_comparison/figures/selected-predictors.png"
+  ],
+  "date": "2026-10-03T19:41:04.205340+00:00",
+  "runtime_seconds": 1.1,
+  "software": {
+    "python": "3.13.15",
+    "pandas": "3.0.6",
+    "numpy": "2.5.3",
+    "matplotlib": "3.11.2"
+  }
+}

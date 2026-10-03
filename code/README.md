@@ -223,6 +223,9 @@ analyses (replaces the step 04 30-day NOAA snapshot).
     `python code/07_orca_ecology_data.py --start-year 2015 --end-year 2018`
   - `--max-depth` (default 5 m), `--ecology-max-km` (25), `--min-profiles` (12),
     `--orca-max-km` (30), `--skip-orca`, `--force` (re-download cached files)
+  - `--output-dir` writes tables, figures, logs and metadata elsewhere (the `raw/` cache stays in
+    `output/07_orca_ecology_data/raw`), so another window can be built without replacing the
+    2015-2018 results; step 11 uses `output/07_orca_ecology_data_2021-2024`
 - **Outputs**
   - `output/07_orca_ecology_data/tables/site_predictors_ecology.tsv` one row of predictors per site
   - `tables/site_station_assignment.tsv`, `monthly_climatology.tsv`, `ecology_profiles.tsv`, `site_summary_orca.tsv`
@@ -247,6 +250,8 @@ Turns the step 07 site climatologies into the predictor side of the step 09 RDA.
   - Run from the repository root: `python code/08_environmental_predictors.py`
   - `--predictors` (default `temp_summer_mean,sal_range,chl_summer_mean`), `--candidates` (collinearity
     screen), `--coops` (default `Coos_Bay=9432780`), `--vif-threshold` (5), `--force` (re-download)
+  - `--step07-dir` reads another step 07 output (its years set the CO-OPS window) and `--output-dir`
+    redirects this step's output (the `raw/` cache stays in place)
 - **Outputs**
   - `tables/site-env-matrix.tsv` one row per site: predictors, source station, `in_env_model`
     (has every selected predictor), `shares_station_with`, dbMEM axes `MEM*` (sites in the model) and
@@ -333,3 +338,30 @@ plain site names and one region colour scheme.
     coloured by region with the Okabe-Ito palette. Label positions are hand-tuned offsets in data units;
     check the figures if site scores or coordinates change.
   - Percentages and p-values printed on the figures are read from the step 06 and 09 tables, not hard-coded.
+
+## 11_climatology_window_comparison.py
+
+Checks whether the site predictors depend on the climatology window. Steps 07 and 08 use 2015-2018,
+the years before the 2018 collections; the 2024 collections were sampled six years after that window.
+
+- **Inputs**
+  - `output/08_environmental_predictors/tables/site-env-matrix.tsv` and `metadata.json` (reference window)
+  - `output/08_environmental_predictors_2021-2024/` (the same files for the alternative window), built by
+    steps 07 and 08 with `--output-dir` (see `output/11_climatology_window_comparison/run_window_comparison.sh`)
+  - `output/09_rda/inputs/collection-year.tsv` (falls back to the step 09 label rule)
+- **Execution**
+  - `python code/11_climatology_window_comparison.py [--reference DIR] [--alternative DIR]`; numpy, pandas,
+    matplotlib. The SLURM script runs steps 07, 08 and 11 together on the coenv `compute` node.
+- **Outputs**
+  - `tables/predictor-agreement.tsv` Pearson r, Spearman rho, mean shift and largest rank change per
+    predictor, over the step 09 environmental-model sites and over each collection year
+  - `tables/site-values.tsv` (per site and predictor, both windows), `tables/station-assignment.tsv`
+  - `figures/selected-predictors.png`, `metadata.json`, `logs/pipeline.log`
+- **Notes**
+  - Result (2026-10-03): the three RDA predictors keep their site order. Spearman rho over 14 sites is
+    1.00 (`temp_summer_mean`), 0.90 (`sal_range`) and 0.93 (`chl_summer_mean`), and 1.00 / 1.00 / 0.96
+    within the 2024 collections. The rank changes are among 2018 sites, chiefly Port Gamble Bay, whose
+    qualifying Ecology station changes (HCB013 to ADM003). Winter and minimum statistics are much less
+    stable (rho down to 0.36).
+  - The 2021-2024 step 07 run got HTTP 503 from the NANOOS ERDDAP, so it has no ORCA summaries (ORCA does
+    not feed the predictors). Charleston CO-OPS temperature is patchy in 2021-2024 outside July-September.

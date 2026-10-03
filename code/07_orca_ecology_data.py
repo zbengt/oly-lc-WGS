@@ -21,7 +21,7 @@ higher-frequency check for the sites it reaches. Coos Bay (Oregon) has no
 source here and is left missing.
 
 Usage:
-    python code/07_orca_ecology_data.py [--start-year 2015] [--end-year 2018]
+    python code/07_orca_ecology_data.py [--start-year 2015] [--end-year 2018] [--output-dir DIR]
 """
 
 from __future__ import annotations
@@ -397,6 +397,7 @@ def plot_climatologies(clim: pd.DataFrame, path: Path) -> None:
 # --------------------------------------------------------------------------- main
 
 def main() -> int:
+    global OUTPUT_DIR, TABLES_DIR, FIGURES_DIR, LOGS_DIR
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--start-year", type=int, default=2015,
@@ -415,7 +416,12 @@ def main() -> int:
                         help="maximum site-to-ORCA-mooring distance (default: 30)")
     parser.add_argument("--skip-orca", action="store_true", help="do not query the NANOOS ERDDAP")
     parser.add_argument("--force", action="store_true", help="re-download cached raw files")
+    parser.add_argument("--output-dir", default=OUTPUT_DIR.as_posix(),
+                        help=f"tables, figures, logs and metadata (default: {OUTPUT_DIR}); "
+                             f"the download cache stays in {RAW_DIR}")
     args = parser.parse_args()
+    OUTPUT_DIR = Path(args.output_dir)
+    TABLES_DIR, FIGURES_DIR, LOGS_DIR = OUTPUT_DIR / "tables", OUTPUT_DIR / "figures", OUTPUT_DIR / "logs"
 
     if not SITE_COORDINATES.exists():
         print(f"ERROR: {SITE_COORDINATES} not found; run code/04_environmental_data.py first.",
@@ -537,7 +543,7 @@ def main() -> int:
             "script": SCRIPT_NAME,
             "inputs": [SITE_COORDINATES.as_posix()],
             "parameters": {
-                "start_year": args.start_year, "end_year": args.end_year,
+                "start_year": args.start_year, "end_year": args.end_year, "output_dir": OUTPUT_DIR.as_posix(),
                 "max_depth_m": args.max_depth, "ecology_max_km": args.ecology_max_km,
                 "min_profiles": args.min_profiles, "min_months": args.min_months,
                 "orca_max_km": args.orca_max_km, "skip_orca": args.skip_orca, "force": args.force,

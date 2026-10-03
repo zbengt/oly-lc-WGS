@@ -1,0 +1,102 @@
+{
+  "script": "08_environmental_predictors.py",
+  "inputs": [
+    "output/04_environmental_data/site-coordinates.tsv",
+    "output/07_orca_ecology_data_2021-2024/tables/site_predictors_ecology.tsv",
+    "output/07_orca_ecology_data_2021-2024/metadata.json"
+  ],
+  "parameters": {
+    "predictors": [
+      "temp_summer_mean",
+      "sal_range",
+      "chl_summer_mean"
+    ],
+    "candidates": [
+      "temp_summer_mean",
+      "temp_range",
+      "sal_annual_mean",
+      "sal_range",
+      "do_month_min",
+      "chl_summer_mean"
+    ],
+    "coops": "Coos_Bay=9432780",
+    "vif_threshold": 5.0,
+    "years": [
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "min_months": 10,
+    "force": false
+  },
+  "sources": {
+    "climatologies": "step 07 (WA Ecology monthly CTD casts, 0-5 m)",
+    "coops": [
+      {
+        "location": "Coos_Bay",
+        "station": "9432780",
+        "n_days": 606,
+        "url_template": "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=water_temperature&station={station}&begin_date={year}0101&end_date={year}1231&interval=h&units=metric&time_zone=gmt&format=csv&application=oly-lc-WGS"
+      }
+    ]
+  },
+  "results": {
+    "n_sites": 15,
+    "n_sites_in_env_model": 14,
+    "excluded_from_env_model": [
+      "Coos_Bay"
+    ],
+    "distinct_stations_in_env_model": 11,
+    "sites_sharing_a_station": {
+      "RSR837": [
+        "FB18_Wild",
+        "Fidalgo_Bay"
+      ],
+      "SIN001": [
+        "CS18_22_Wild_plate1",
+        "Dogfish_Bay",
+        "Ostrich_Bay"
+      ]
+    },
+    "selected_max_vif": 1.978,
+    "vif_survivors": [
+      "temp_summer_mean",
+      "sal_range",
+      "do_month_min",
+      "chl_summer_mean"
+    ],
+    "mem_axes_env_model": [
+      "MEM1",
+      "MEM2",
+      "MEM3",
+      "MEM4"
+    ],
+    "mem_axes_all_sites": [
+      "MEMall1"
+    ],
+    "environment_pc1_pc2": [
+      0.5874,
+      0.2453
+    ]
+  },
+  "produced_files": [
+    "output/08_environmental_predictors_2021-2024/tables/site-env-matrix.tsv",
+    "output/08_environmental_predictors_2021-2024/tables/predictor-correlation.tsv",
+    "output/08_environmental_predictors_2021-2024/tables/within-family-correlation.tsv",
+    "output/08_environmental_predictors_2021-2024/tables/vif.tsv",
+    "output/08_environmental_predictors_2021-2024/tables/vif-elimination.tsv",
+    "output/08_environmental_predictors_2021-2024/tables/candidate-sets.tsv",
+    "output/08_environmental_predictors_2021-2024/tables/environment-pca.tsv",
+    "output/08_environmental_predictors_2021-2024/tables/dbmem.tsv",
+    "output/08_environmental_predictors_2021-2024/figures/predictor-correlation.png"
+  ],
+  "date": "2026-10-03T19:34:02.548595+00:00",
+  "runtime_seconds": 9.7,
+  "software": {
+    "python": "3.13.15",
+    "pandas": "3.0.6",
+    "numpy": "2.5.3",
+    "matplotlib": "3.11.2"
+  }
+}

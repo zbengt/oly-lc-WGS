@@ -21,7 +21,7 @@ summer chlorophyll, the set chosen in the earlier Olurida_v081 analysis; the
 VIF table shows whether it still holds on the current data.
 
 Usage:
-    python code/08_environmental_predictors.py [--predictors a,b,c] [--force]
+    python code/08_environmental_predictors.py [--predictors a,b,c] [--force] [--step07-dir DIR] [--output-dir DIR]
 """
 
 from __future__ import annotations
@@ -239,6 +239,7 @@ def plot_correlation(corr: pd.DataFrame, selected: list[str], path: Path) -> Non
 # --------------------------------------------------------------------------- main
 
 def main() -> int:
+    global STEP07_DIR, OUTPUT_DIR, TABLES_DIR, FIGURES_DIR, LOGS_DIR
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--predictors", default=DEFAULT_PREDICTORS,
@@ -251,7 +252,14 @@ def main() -> int:
     parser.add_argument("--vif-threshold", type=float, default=5.0,
                         help="VIF above which backward elimination drops a predictor (default: 5)")
     parser.add_argument("--force", action="store_true", help="re-download cached CO-OPS files")
+    parser.add_argument("--step07-dir", default=STEP07_DIR.as_posix(),
+                        help=f"step 07 output to read (default: {STEP07_DIR}); its years set the CO-OPS window")
+    parser.add_argument("--output-dir", default=OUTPUT_DIR.as_posix(),
+                        help=f"tables, figures, logs and metadata (default: {OUTPUT_DIR}); "
+                             f"the CO-OPS cache stays in {RAW_DIR}")
     args = parser.parse_args()
+    STEP07_DIR, OUTPUT_DIR = Path(args.step07_dir), Path(args.output_dir)
+    TABLES_DIR, FIGURES_DIR, LOGS_DIR = OUTPUT_DIR / "tables", OUTPUT_DIR / "figures", OUTPUT_DIR / "logs"
 
     predictor_table = STEP07_DIR / "tables/site_predictors_ecology.tsv"
     for path in (SITE_COORDINATES, predictor_table, STEP07_DIR / "metadata.json", STEP07_SCRIPT):
