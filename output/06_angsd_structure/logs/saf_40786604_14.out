@@ -1,0 +1,194 @@
+start 2026-09-27T20:55:25Z host n3435 pop=WB n=8 minInd=6 depth 19-116
+	-> angsd version: 0.940-dirty (htslib: 1.24) build(Dec 15 2024 09:11:59)
+	-> angsd -b output/06_angsd_structure/samples/WB.bams -ref output/05_realign_xbOstLuri2/reference/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna -anc output/05_realign_xbOstLuri2/reference/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna -rf output/06_angsd_structure/samples/chromosomes.txt -out output/06_angsd_structure/saf/WB -doSaf 1 -GL 1 -doCounts 1 -minMapQ 20 -minQ 20 -uniqueOnly 1 -remove_bads 1 -only_proper_pairs 1 -C 50 -baq 1 -minInd 6 -setMinDepth 19 -setMaxDepth 116 -P 8 
+	-> Inputtype is BAM/CRAM
+[multiReader] 8 samples in 8 input files
+	-> Reading fasta: output/05_realign_xbOstLuri2/reference/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna
+	-> Reading fasta: output/05_realign_xbOstLuri2/reference/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna
+	-> !! You are doing -dosaf incombination with -rf, please make sure that your -rf file is sorted !!
+	-> Parsing 8 number of samples 
+	-> Region lookup 1/10
+	-> Allocated ~ 10 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Allocated ~ 20 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Region lookup 2/10
+	-> Allocated ~ 30 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Region lookup 3/10
+	-> Region lookup 4/10
+	-> Region lookup 5/10
+	-> Region lookup 6/10
+	-> Region lookup 7/10
+	-> Region lookup 8/10
+	-> Allocated ~ 40 million nodes to the nodepool, this is not an estimate of the memory usage
+	-> Region lookup 9/10
+	-> Region lookup 10/10
+	-> Done reading data waiting for calculations to finish
+	-> Done waiting for threads
+	-> Output filenames:
+		->"output/06_angsd_structure/saf/WB.arg"
+		->"output/06_angsd_structure/saf/WB.saf.gz"
+		->"output/06_angsd_structure/saf/WB.saf.pos.gz"
+		->"output/06_angsd_structure/saf/WB.saf.idx"
+	-> Sun Sep 27 16:34:48 2026
+	-> Arguments and parameters for all analysis are located in .arg file
+	-> Total number of sites analyzed: 912970131
+	-> Number of sites retained after filtering: 611078966 
+	[ALL done] cpu-time used =  13485.88 sec
+	[ALL done] walltime used =  9563.00 sec
+[persaf::persaf_init] Version of output/06_angsd_structure/saf/WB.saf.idx is 3
+[persaf::persaf_init] Assuming .saf.gz file is output/06_angsd_structure/saf/WB.saf.gz
+[persaf::persaf_init] Assuming .saf.pos.gz file is output/06_angsd_structure/saf/WB.saf.pos.gz
+	-> args: tole:0.000000 nthreads:8 maxiter:100 nsites(block):0 start:(null) chr:(null) start:-1 stop:-1 fstout:(null) oldout:0 seed:-1 bootstrap:0 resample_chr:0 whichFst:0 fold:1 ref:(null) anc:(null)
+	-> The choice of -nSites will require atleast: 26598.718750 megabyte memory, that is at least: 1.72% of total memory
+	-> dim(output/06_angsd_structure/saf/WB.saf.idx):17
+	-> Dimension of parameter space: 17
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196826.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196827.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196828.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196829.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196830.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196831.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196832.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196833.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196834.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196835.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+------------
+startlik=-1234752381.141375
+	-> Instability detected, accelerated guess is too close to bound or outside will fallback to regular EM for this step
+	-> Breaking EM(sq2) at iter:66, sqrt(sq2):9.558875e-11
+likelihood: -52847622.860393
+------------
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> NB output is no longer log probs of the frequency spectrum!
+	-> Output is now simply the expected values! 
+	-> You can convert to the old format simply with log(norm(x))
+	-> Please check that it has converged!
+	-> You can add start new optimization by supplying -sfs FILE, where is >FILE from this run
+	-> -maxIter INT -tole FLOAT
+[persaf::persaf_init] Version of output/06_angsd_structure/saf/WB.saf.idx is 3
+[persaf::persaf_init] Assuming .saf.gz file is output/06_angsd_structure/saf/WB.saf.gz
+[persaf::persaf_init] Assuming .saf.pos.gz file is output/06_angsd_structure/saf/WB.saf.pos.gz
+	-> args: tole:0.000000 nthreads:4 maxiter:100 nsites(block):0 start:output/06_angsd_structure/sfs/WB.sfs chr:(null) start:-1 stop:-1 fstout:output/06_angsd_structure/sfs/WB oldout:0 seed:-1 bootstrap:0 resample_chr:0 whichFst:0 fold:1 ref:(null) anc:(null)
+	-> Will read chunks of size: 4096
+	-> Reading: output/06_angsd_structure/sfs/WB.sfs assuming counts (will normalize to probs internally)
+	-> nChr:16
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196826.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196827.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Writing 84172548 sites for chr:CM196826.1
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196828.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Writing 82765485 sites for chr:CM196827.1
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196829.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Writing 81823964 sites for chr:CM196828.1
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196830.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Writing 73483461 sites for chr:CM196829.1
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196831.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Writing 71201401 sites for chr:CM196830.1
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196832.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Writing 45529528 sites for chr:CM196831.1
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196833.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Writing 57801658 sites for chr:CM196832.1
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196834.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Writing 48141655 sites for chr:CM196833.1
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Is in multi sfs, will now read data from chr:CM196835.1
+	-> hello Im the master merge part of realSFS. and I'll now do a tripple bypass to find intersect 
+	-> 1) Will set iter according to chooseChr and start and stop, and possibly using -sites
+	-> Writing 34207802 sites for chr:CM196834.1
+	-> Only read nSites: 0 will therefore prepare next chromosome (or exit)
+	-> Done reading data from chromosome will prepare next chromosome
+	-> Writing 31951464 sites for chr:CM196835.1
+	-> Output filenames:
+		->"output/06_angsd_structure/sfs/WB.thetas.gz"
+		->"output/06_angsd_structure/sfs/WB.thetas.idx"
+ thetaStat do_stat output/06_angsd_structure/sfs/WB.thetas.idx
+	Assuming binfile:output/06_angsd_structure/sfs/WB.thetas.gz and indexfile:output/06_angsd_structure/sfs/WB.thetas.idx
+		Information from index file:
+		0	CM196826.1	84172548	8	16
+		1	CM196827.1	82765485	35702268021126	16
+		2	CM196828.1	81823964	70816621479644	16
+		3	CM196829.1	73483461	105592312012186	16
+		4	CM196830.1	71201401	136718291671088	16
+		5	CM196831.1	45529528	166973869954214	16
+		6	CM196832.1	57801658	185728977821956	16
+		7	CM196833.1	48141655	210095968550034	16
+		8	CM196834.1	34207802	230063166660824	16
+		9	CM196835.1	31951464	244107072472678	16
+	 -r=(null) outnames=(null) step: 0 win: 0
+	Winsize equals zero or step size equals zero. Will use entire chromosome as window
+	pc.chr=CM196826.1 pc.nSites=84172548 firstpos=395 lastpos=121144037
+	pc.chr=CM196827.1 pc.nSites=82765485 firstpos=10219 lastpos=119088556
+	pc.chr=CM196828.1 pc.nSites=81823964 firstpos=85 lastpos=115857624
+	pc.chr=CM196829.1 pc.nSites=73483461 firstpos=1247 lastpos=104668149
+	pc.chr=CM196830.1 pc.nSites=71201401 firstpos=1017 lastpos=100161132
+	pc.chr=CM196831.1 pc.nSites=45529528 firstpos=1449 lastpos=98167812
+	pc.chr=CM196832.1 pc.nSites=57801658 firstpos=2436 lastpos=94636373
+	pc.chr=CM196833.1 pc.nSites=48141655 firstpos=6308 lastpos=93084634
+	pc.chr=CM196834.1 pc.nSites=34207802 firstpos=466 lastpos=82543444
+	pc.chr=CM196835.1 pc.nSites=31951464 firstpos=301 lastpos=65617213
+	Dumping file: "output/06_angsd_structure/sfs/WB.thetas.idx.pestPG"
+end 2026-09-28T01:20:04Z pop=WB

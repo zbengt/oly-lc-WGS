@@ -1,0 +1,19 @@
+/opt/ohpc/admin/lmod/lmod/init/bash: line 93: LD_LIBRARY_PATH: unbound variable
+start 2026-09-27T11:55:05Z host n3434 sample=Blank_plate2 location=Blank
+[M::bwa_idx_load_from_disk] read 0 ALT contigs
+[M::process] read 3212 sequences (481800 bp)...
+[M::mem_pestat] # candidate unique pairs for (FF, FR, RF, RR): (0, 60, 0, 0)
+[M::mem_pestat] skip orientation FF as there are not enough pairs
+[M::mem_pestat] analyzing insert size distribution for orientation FR...
+[M::mem_pestat] (25, 50, 75) percentile: (237, 305, 417)
+[M::mem_pestat] low and high boundaries for computing mean and std.dev: (1, 777)
+[M::mem_pestat] mean and std.dev: (328.88, 126.13)
+[M::mem_pestat] low and high boundaries for proper pairs: (1, 957)
+[M::mem_pestat] skip orientation RF as there are not enough pairs
+[M::mem_pestat] skip orientation RR as there are not enough pairs
+[M::mem_process_seqs] Processed 3212 reads in 0.714 CPU sec, 0.167 real sec
+[main] Version: 0.7.19-r1273
+[main] CMD: bwa mem -t 16 -R @RG\tID:Blank_plate2\tSM:Blank_plate2\tLB:Blank_plate2\tPL:ILLUMINA output/05_realign_xbOstLuri2/reference/GCA_061535525.1_xbOstLuri2_USDA-ARS_PSRF_primary_genomic.fna data/raw/Blank_plate2_S108_L004_R1_001.fastq.gz data/raw/Blank_plate2_S108_L004_R2_001.fastq.gz
+[main] Real time: 1.352 sec; CPU: 1.056 sec
+[bam_sort_core] merging from 0 files and 8 in-memory blocks...
+end 2026-09-27T11:55:08Z sample=Blank_plate2

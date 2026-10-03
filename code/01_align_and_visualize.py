@@ -54,6 +54,13 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import numpy as np
 import pandas as pd
 
+# PLINK 1.9 hard-codes MAX_POSSIBLE_CHROM = 65280 distinct chromosome codes
+# (plink_common.h); --allow-extra-chr does not lift that cap. Olurida_v081 has
+# 159,429 contigs, so a length filter is mandatory before PLINK conversion.
+PLINK19_MAX_CHROM_CODES = 65280
+DEFAULT_PLINK_MIN_CONTIG_LENGTH = 20000
+DEFAULT_PLINK_MAX_CONTIGS = 60000
+
 
 @dataclass(frozen=True)
 class Sample:
@@ -144,14 +151,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--plink-min-contig-length",
         type=int,
-        default=100000,
-        help="Minimum contig length to include in PLINK conversion (filters excessive small scaffolds).",
+        default=DEFAULT_PLINK_MIN_CONTIG_LENGTH,
+        help=(
+            "Minimum contig length (bp, from the reference .fai) to include in the "
+            "PLINK subset. Default 20000 keeps ~11.5k contigs / ~32%% of Olurida_v081. "
+            "See code/README.md for the rationale."
+        ),
     )
     parser.add_argument(
         "--plink-max-contigs",
         type=int,
-        default=200,
-        help="Maximum number of contigs to include for PLINK after applying length filter (longest retained).",
+        default=DEFAULT_PLINK_MAX_CONTIGS,
+        help=(
+            "Maximum number of contigs to keep after the length filter (longest "
+            "retained). PLINK 1.9 accepts at most %d distinct chromosome codes, "
+            "so this must stay below that." % PLINK19_MAX_CHROM_CODES
+        ),
     )
     parser.add_argument(
         "--plink2",
@@ -688,8 +703,88 @@ def call_variants(
     return raw_vcf, filtered_vcf
 
 
+def read_fai_lengths(fai_path: Path) -> List[Tuple[str, int]]:
+    """Return (contig, length) pairs from a samtools .fai index, in file order."""
+    lengths: List[Tuple[str, int]] = []
+    with fai_path.open() as handle:
+        for line_no, line in enumerate(handle, start=1):
+            fields = line.rstrip("\n").split("\t")
+            if len(fields) < 2 or not fields[0]:
+                continue
+            try:
+                lengths.append((fields[0], int(fields[1])))
+            except ValueError as exc:
+                raise ValueError(
+                    f"Malformed length on line {line_no} of {fai_path}: {line.rstrip()!r}"
+                ) from exc
+    if not lengths:
+        raise RuntimeError(f"No contigs read from {fai_path}")
+    return lengths
+
+
+def select_plink_contigs(
+    fai_path: Path,
+    min_length: int,
+    max_contigs: int,
+) -> List[Tuple[str, int]]:
+    """
+    Choose the contigs to carry into PLINK from the reference .fai.
+
+    Contigs shorter than ``min_length`` are dropped, the remainder are sorted
+    by length (descending, then name for determinism) and truncated to
+    ``max_contigs``. The result is logged with the genome fraction retained so
+    the choice is visible in pipeline.log.
+    """
+    if max_contigs < 1:
+        raise ValueError("--plink-max-contigs must be >= 1")
+    lengths = read_fai_lengths(fai_path)
+    genome_bp = sum(length for _, length in lengths)
+    passing = [(cid, length) for cid, length in lengths if length >= min_length]
+    if not passing:
+        raise RuntimeError(
+            f"No contigs in {fai_path} are >= {min_length} bp; "
+            "reduce --plink-min-contig-length."
+        )
+    passing.sort(key=lambda item: (-item[1], item[0]))
+    selected = passing[:max_contigs]
+    selected_bp = sum(length for _, length in selected)
+    logging.info(
+        "PLINK contig selection from %s: %d of %d contigs pass length >= %d "
+        "(%d retained after --plink-max-contigs=%d); %d bp = %.2f%% of the "
+        "%d bp assembly; shortest retained = %d bp.",
+        fai_path.name,
+        len(passing),
+        len(lengths),
+        min_length,
+        len(selected),
+        max_contigs,
+        selected_bp,
+        100.0 * selected_bp / genome_bp,
+        genome_bp,
+        selected[-1][1],
+    )
+    if len(selected) > PLINK19_MAX_CHROM_CODES:
+        raise RuntimeError(
+            f"{len(selected)} contigs selected but PLINK 1.9 supports at most "
+            f"{PLINK19_MAX_CHROM_CODES} chromosome codes; raise "
+            "--plink-min-contig-length or lower --plink-max-contigs."
+        )
+    return selected
+
+
+def format_plink_regions(selected: List[Tuple[str, int]]) -> str:
+    """
+    Serialise selected contigs as a three-column bcftools regions file
+    (CHROM, 1-based start, end). One column per contig would be ambiguous to
+    ``bcftools -R`` (two columns are read as CHROM POS), so the full span is
+    written explicitly. Also serves as the human-readable record of the subset.
+    """
+    return "".join(f"{cid}\t1\t{length}\n" for cid, length in selected)
+
+
 def run_plink_pca(
     filtered_vcf: Path,
+    reference_fasta: Path,
     variant_dir: Path,
     threads: int,
     force: bool,
@@ -697,11 +792,14 @@ def run_plink_pca(
     plink_max_contigs: int,
     use_plink2: bool,
     keep_ids: Optional[List[str]] = None,
-) -> Tuple[Path, Path]:
+) -> Tuple[Path, Path, Path]:
     """Convert VCF to PLINK format and compute PCA + IBS matrices.
 
     `keep_ids`, when given, restricts PCA/IBS to those sample IDs via `--keep`
     (used to drop blanks and other undiscovered samples from an existing VCF).
+
+    Returns the eigenvec path, the IBS matrix path, and the regions file
+    listing the contigs that were carried into PLINK.
     """
     prefix = variant_dir / "plink_dataset"
     pca_prefix = variant_dir / "pca"
@@ -711,71 +809,68 @@ def run_plink_pca(
     eigenvec = pca_prefix.with_suffix(".eigenvec")
     ibs_matrix = ibs_prefix.with_suffix(".mibs")
 
+    regions_file = variant_dir / "plink_contigs.txt"
+    subset_vcf = variant_dir / "subset_for_plink.vcf.gz"
+
     if not (bed_file.exists() and eigenvec.exists() and ibs_matrix.exists()) or force:
-        # Subset VCF to long contigs to satisfy PLINK limits on distinct chromosome names.
-        subset_vcf = variant_dir / "subset_for_plink.vcf.gz"
-        subset_index_csi = subset_vcf.with_suffix(".csi")
-        if not subset_vcf.exists() or force:
-            logging.info(
-                "Creating PLINK subset VCF retaining contigs length >= %d", plink_min_contig_length
+        # Subset the VCF to a bounded set of long contigs: PLINK 1.9 caps the
+        # number of distinct chromosome codes (see PLINK19_MAX_CHROM_CODES).
+        # Lengths come from the reference .fai, not the VCF header, so the
+        # selection is independent of how the VCF was produced.
+        fai_path = reference_fasta.with_name(reference_fasta.name + ".fai")
+        if not fai_path.exists():
+            raise FileNotFoundError(
+                f"Reference index {fai_path} not found; prepare_reference() should have built it."
             )
-            # Extract contig lengths from header, select those meeting threshold.
-            header_proc = run_command([
-                "bcftools",
-                "view",
-                "-h",
-                str(filtered_vcf),
-            ], capture_output=True, text=True)
-            contigs_with_len: list[tuple[str,int]] = []
-            for line in header_proc.stdout.splitlines():
-                if line.startswith("##contig="):
-                    # Format: ##contig=<ID=Contig0,length=116746>
-                    try:
-                        inside = line.split("<", 1)[1].rsplit(">", 1)[0]
-                        parts = dict(
-                            kv.split("=") for kv in inside.split(",") if "=" in kv
-                        )
-                        cid = parts.get("ID")
-                        length_val = int(parts.get("length", "0"))
-                        if cid and length_val >= plink_min_contig_length:
-                            contigs_with_len.append((cid,length_val))
-                    except Exception:
-                        continue
-            if not contigs_with_len:
-                raise RuntimeError(
-                    "No contigs meet length threshold for PLINK conversion; reduce --plink-min-contig-length."
-                )
-            # Sort by length desc and retain top N
-            contigs_with_len.sort(key=lambda x: x[1], reverse=True)
-            selected = [cid for cid,_ in contigs_with_len[:plink_max_contigs]]
+        selected = select_plink_contigs(
+            fai_path, plink_min_contig_length, plink_max_contigs
+        )
+        regions_text = format_plink_regions(selected)
+        previous_text = regions_file.read_text() if regions_file.exists() else None
+        selection_changed = previous_text != regions_text
+        if selection_changed and previous_text is not None:
             logging.info(
-                "Selected %d contigs (threshold=%d, max=%d). Shortest retained length=%d.",
+                "Contig selection differs from existing %s (%d lines before, %d now); "
+                "rebuilding PLINK subset VCF.",
+                regions_file.name,
+                len(previous_text.splitlines()),
                 len(selected),
-                plink_min_contig_length,
-                plink_max_contigs,
-                contigs_with_len[min(len(contigs_with_len), plink_max_contigs)-1][1],
             )
-            regions_file = variant_dir / "plink_contigs.txt"
-            regions_file.write_text("\n".join(selected) + "\n")
+        if force or selection_changed or not subset_vcf.exists():
+            regions_file.write_text(regions_text)
+            logging.info(
+                "Creating PLINK subset VCF with %d contigs listed in %s",
+                len(selected),
+                regions_file,
+            )
             view_cmd = [
                 "bcftools",
                 "view",
+                "--threads",
+                str(threads),
                 "-Oz",
                 "-o",
                 str(subset_vcf),
-                "-r",
-                ",".join(selected),
+                "-R",
+                str(regions_file),
                 str(filtered_vcf),
             ]
             run_command(view_cmd)
             run_command([
                 "bcftools",
                 "index",
+                "-f",
                 "--threads",
                 str(threads),
                 str(subset_vcf),
             ])
-        plink_input_vcf = subset_vcf if subset_vcf.exists() else filtered_vcf
+        else:
+            logging.info(
+                "Reusing existing PLINK subset VCF %s (%d contigs, selection unchanged).",
+                subset_vcf.name,
+                len(selected),
+            )
+        plink_input_vcf = subset_vcf
         plink_bin = "plink2" if use_plink2 and shutil.which("plink2") else "plink"
         if use_plink2 and plink_bin != "plink2":
             logging.warning("--plink2 requested but 'plink2' not found; falling back to 'plink'.")
@@ -839,8 +934,13 @@ def run_plink_pca(
             str(ibs_prefix),
         ]
         run_command(ibs_cmd, cwd=variant_dir)
+    else:
+        logging.info(
+            "PLINK outputs present; skipping conversion/PCA/IBS. Contig subset on disk: %s",
+            regions_file if regions_file.exists() else "unknown (no plink_contigs.txt)",
+        )
 
-    return eigenvec, ibs_matrix
+    return eigenvec, ibs_matrix, regions_file
 
 
 def generate_visualization(
@@ -1080,8 +1180,9 @@ def main() -> None:
         elif len(keep_ids) == len(vcf_names):
             keep_ids = None  # nothing to drop
 
-        eigenvec_path, ibs_matrix_path = run_plink_pca(
+        eigenvec_path, ibs_matrix_path, plink_regions_path = run_plink_pca(
             filtered_vcf,
+            reference_fasta,
             variant_dir,
             threads=total_threads,
             force=force_variants or args.force_plink or renamed,
@@ -1117,10 +1218,18 @@ def main() -> None:
                 "force_variants": args.force_variants,
                 "force_plink": args.force_plink,
                 "force": args.force,
+                "plink_min_contig_length": args.plink_min_contig_length,
+                "plink_max_contigs": args.plink_max_contigs,
+                "plink2": args.plink2,
+                "plink_contigs_selected": (
+                    len(plink_regions_path.read_text().splitlines())
+                    if plink_regions_path.exists()
+                    else None
+                ),
             },
             outputs={
                 "alignments": bam_paths,
-                "variants": [raw_vcf, filtered_vcf],
+                "variants": [raw_vcf, filtered_vcf, plink_regions_path],
                 "figures": [figure_path],
                 "metrics": [
                     metrics_dir / "sample_metadata.tsv",

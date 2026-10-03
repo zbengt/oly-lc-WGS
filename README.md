@@ -25,6 +25,8 @@ Additional details for each analysis step are documented in
 | 2 | `code/02_bam_summary.py` | Summarize mismatch, heterozygosity, IBS, and PCA directly from BAMs without rerunning variant calling | `output/02_bam_summary/tables/`, `figures/bam_connectedness.png` |
 | 3 | `code/03_variant_summary.py` | Generate VCF/PLINK-based variant quality and diversity summaries | `output/03_variant_summary/` |
 | 4 | `code/04_environmental_data.py` | Match each putative sampling site to nearby NOAA buoys/stations and download recent observations | `output/04_environmental_data/` |
+| 5 | `code/05_realign_xbOstLuri2.Rmd` | Re-align all samples to the chromosome-level NCBI reference GCA_061535525.1 (xbOstLuri2) with read groups and duplicate marking, via SLURM array jobs | `output/05_realign_xbOstLuri2/alignments/`, `metrics/`, `figures/` |
+| 6 | `code/06_angsd_structure.Rmd` | Genotype-likelihood population structure on the step 05 BAMs: ANGSD Beagle likelihoods, PCAngsd PCA and admixture, folded SFS diversity, and pairwise Fst for all 15 locations | `output/06_angsd_structure/tables/`, `figures/`, `pca/`, `sfs/`, `fst/` |
 
 ## Requirements
 
@@ -45,6 +47,8 @@ python code/01_align_and_visualize.py --threads 32 --threads-per-sample 4
 python code/02_bam_summary.py --num-sites 500
 python code/03_variant_summary.py --threads 32
 python code/04_environmental_data.py --days 30 --radius-km 75
+Rscript -e 'rmarkdown::render("code/05_realign_xbOstLuri2.Rmd")'   # or run its chunks in RStudio
+Rscript -e 'rmarkdown::render("code/06_angsd_structure.Rmd")'      # submits SLURM jobs; rerun R chunks when done
 ```
 
 All outputs are written with relative paths so results remain reproducible across
@@ -132,9 +136,75 @@ Step 01 connectedness figure:
 
 ![Genetic connectedness across samples](output/01_align_and_visualize/figures/genetic_connectedness.png)
 
+> **Caveat.** This figure predates the fix to the PLINK contig selection in
+> `code/01_align_and_visualize.py`. The PLINK dataset behind it contains
+> 7,865 SNPs, all on `Contig19646` (194 kb, 0.02 % of the genome), because a
+> stale one-contig `subset_for_plink.vcf.gz` was reused. The current code
+> selects contigs from the reference `.fai` (default `>= 20 kb`, ~11.5k
+> contigs, ~32 % of the assembly); rerun step 01 with `--force` to regenerate
+> the PCA/IBS results and this figure. See `code/README.md` for details.
+
 Step 02 BAM-based connectedness figure:
 
 ![BAM-based connectedness across samples](output/02_bam_summary/figures/bam_connectedness.png)
+
+### Step 05 re-alignment to xbOstLuri2 (2026-09-27)
+
+All 112 samples were re-aligned to the chromosome-level NCBI reference
+GCA_061535525.1 (xbOstLuri2) by `code/05_realign_xbOstLuri2.Rmd`, with read
+groups and duplicate marking. Every task completed; per-sample tables are in
+[`output/05_realign_xbOstLuri2/metrics/`](output/05_realign_xbOstLuri2/metrics/).
+
+| Metric (110 non-blank samples) | Olurida_v081 (step 01) | xbOstLuri2 (step 05) |
+| --- | ---: | ---: |
+| Mean depth, median across samples | 5.55x | 7.15x |
+| Depth ratio xbOstLuri2 / v081, median | | 1.28 |
+| Primary reads mapped, location means | | 96.5 to 99.0% |
+| Duplicates (marked), location means | not marked | 12.5 to 21.6% |
+| Mean MAPQ | 53 | 37 |
+
+The lower mean MAPQ is expected: reads that v081 placed with low but nonzero
+confidence among fragmented contigs are now MAPQ 0 on repeat copies that are
+actually assembled, while the share of reads at MAPQ 30 or higher is unchanged
+(67% in Coos_Bay_7 on both). Filter on MAPQ 20 or 30 downstream as before.
+`HC18_Triton_Wild_10` remains the low-coverage outlier (0.78x, 79% mapped).
+
+![Depth on v081 versus xbOstLuri2 and mapping rate by location](output/05_realign_xbOstLuri2/figures/depth_v081_vs_xbOstLuri2.png)
+
+### Step 06 genotype-likelihood population structure (2026-09-28)
+
+`code/06_angsd_structure.Rmd` analysed the 109 usable step 05 BAMs (blanks and
+the 0.78x sample `HC18_Triton_Wild_10` excluded) with ANGSD and PCAngsd over the
+10 chromosomes: 7,418,858 SNP sites for the PCA and admixture, and folded site
+frequency spectra over about 620 million sites per population for diversity and
+Fst. Tables and figures are in
+[`output/06_angsd_structure/`](output/06_angsd_structure/).
+
+Main findings:
+
+- **WB is Coos Bay stock.** The eight WB samples sit inside the Coos Bay cluster
+  on PC1 (5.4% of variance), share one ancestry component with Coos Bay at every
+  K, and have a weighted Fst of 0.037 to Coos Bay, the same as neighbouring sites
+  within Puget Sound, against 0.11 to 0.14 to every Puget Sound site. Whatever
+  the WB prefix denotes, these are not a San Juan Island wild population.
+- **Three Puget Sound groups**: South and Central Sound (LS, Squaxin Island,
+  North Bay, Dogfish Bay, Ostrich Bay, CS18), Hood Canal (Triton Cove, Port
+  Gamble) and a north Olympic Peninsula group (Sequim, Discovery Bay), with the
+  Fidalgo Bay sets intermediate and carrying a small Coos Bay-like component.
+  Weighted Fst within groups is 0.034 to 0.038 and between groups 0.04 to 0.09.
+- **MB groups with Hood Canal**, not the South Sound (Fst 0.035 to Sequim and
+  0.036 to Port Gamble, against 0.06 to 0.07 to the South Sound sites), so the
+  "Mud Bay, Eld Inlet" reading of that prefix and its step 04 station match
+  should be revisited.
+- Nucleotide diversity is 0.0034 to 0.0040 per site. Tajima's D splits by
+  sample-set naming (2018 wild sets near zero or negative, other sets 0.35 to
+  0.49), which follows the duplicate-rate split seen in step 05 and may be a
+  library-batch effect on the rare-variant tail rather than biology; the PCA
+  shows no batch axis.
+
+![PCAngsd PCA of 109 samples](output/06_angsd_structure/figures/pca.png)
+
+![Weighted pairwise Fst](output/06_angsd_structure/figures/fst_heatmap.png)
 
 ### Current status of later-stage summaries
 
