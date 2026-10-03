@@ -1,0 +1,121 @@
+start 2026-10-03T19:12:23Z host n3287 chunks: rda-models
+Set of permutations < 'minperm'. Generating entire set.
+Set of permutations < 'minperm'. Generating entire set.
+Set of permutations < 'minperm'. Generating entire set.
+Set of permutations < 'minperm'. Generating entire set.
+Set of permutations < 'minperm'. Generating entire set.
+Set of permutations < 'minperm'. Generating entire set.
+Set of permutations < 'minperm'. Generating entire set.
+Set of permutations < 'minperm'. Generating entire set.
+          model                                  component         r2
+1           env                                environment 0.25354576
+2           geo                          geography (dbMEM) 0.20685651
+3           str                      structure (PC1 + PC2) 0.27255369
+4          year                            collection year 0.08206480
+5       env_geo                    environment | geography 0.19919504
+6       env_str                    environment | structure 0.20183949
+7      env_both        environment | geography + structure 0.18583965
+8      env_year                         environment | year 0.25939835
+9  env_geo_year             environment | geography + year 0.20068177
+10      env_all environment | geography + structure + year 0.18658162
+11 year_env_geo             year | environment + geography 0.09022203
+12         full                                 full model 0.60831041
+13    full_year                          full model + year 0.67593231
+         r2_adj
+1   0.029609483
+2   0.062648605
+3   0.140290727
+4   0.005570200
+5  -0.027814834
+6   0.005598197
+7  -0.014451875
+8   0.043209906
+9  -0.019761277
+10 -0.012770868
+11  0.029674305
+12  0.151339213
+13  0.157423995
+           model permutation  scope        term df  variance         F     p
+1            env        free global constrained  3 1841721.9 1.1322228 0.164
+10           geo        free global constrained  2 1502577.6 1.4344325 0.003
+17           str        free global constrained  2 1979793.0 2.0606955 0.001
+24          year        free global constrained  1  596107.5 1.0728182 0.191
+25       env_geo        free global constrained  3 1446925.7 0.8943314 0.921
+34       env_str        free global constrained  3 1466134.6 1.0240329 0.368
+43      env_both        free global constrained  3 1349914.0 0.9489129 0.830
+52      env_year        free global constrained  3 1884234.3 1.1817031 0.076
+61  env_geo_year        free global constrained  3 1457725.1 0.9295869 0.840
+70       env_all        free global constrained  3 1355303.5 0.9595815 0.812
+79  year_env_geo        free global constrained  1  655360.5 1.2537643 0.071
+84           env within year global constrained  3 1841721.9 1.1322228 0.170
+93       env_geo within year global constrained  3 1446925.7 0.8943314 0.946
+102      env_str within year global constrained  3 1466134.6 1.0240329 0.316
+111     env_both within year global constrained  3 1349914.0 0.9489129 0.809
+120     env_year within year global constrained  3 1884234.3 1.1817031 0.119
+129 env_geo_year within year global constrained  3 1457725.1 0.9295869 0.811
+138      env_all within year global constrained  3 1355303.5 0.9595815 0.838
+                                   model             permutation n_individuals
+env                                  env             among sites           102
+env_geo                          env_geo             among sites           102
+temp_summer_mean        temp_summer_mean             among sites           102
+sal_range                      sal_range             among sites           102
+chl_summer_mean          chl_summer_mean             among sites           102
+env within                           env among sites within year           102
+env_geo within                   env_geo among sites within year           102
+env_year within                 env_year among sites within year           102
+temp_summer_mean within temp_summer_mean among sites within year           102
+sal_range within               sal_range among sites within year           102
+chl_summer_mean within   chl_summer_mean among sites within year           102
+free                                 env free (pseudoreplicated)           102
+                             r2_adj        F     p
+env                     0.017744469 1.608189 0.087
+env_geo                 0.005559308 1.187974 0.712
+temp_summer_mean        0.003072633 1.311292 0.420
+sal_range               0.010719147 2.094365 0.076
+chl_summer_mean         0.001000549 1.101157 0.725
+env within              0.017744469 1.608189 0.162
+env_geo within          0.005559308 1.187974 0.773
+env_year within         0.018850229 1.642794 0.095
+temp_summer_mean within 0.003072633 1.311292 0.327
+sal_range within        0.010719147 2.094365 0.094
+chl_summer_mean within  0.001000549 1.101157 0.809
+free                    0.017744469 1.608189 0.001
+                      year            model n_units   n_snp        r2
+2018 env              2018              env       7 6874146 0.4955123
+2018 temp_summer_mean 2018 temp_summer_mean       7 6874146 0.1614641
+2018 sal_range        2018        sal_range       7 6874146 0.1517256
+2018 chl_summer_mean  2018  chl_summer_mean       7 6874146 0.1833379
+2024 env              2024              env       7 6943818 0.5550386
+2024 temp_summer_mean 2024 temp_summer_mean       7 6943818 0.1759591
+2024 sal_range        2024        sal_range       7 6943818 0.1993373
+2024 chl_summer_mean  2024  chl_summer_mean       7 6943818 0.1623742
+                            r2_adj         F     p
+2018 env              -0.008975388 0.9822089 0.591
+2018 temp_summer_mean -0.006243028 0.9627742 0.538
+2018 sal_range        -0.017929318 0.8943189 0.777
+2018 chl_summer_mean   0.020005449 1.1224830 0.256
+2024 env               0.110077257 1.2473861 0.102
+2024 temp_summer_mean  0.011150861 1.0676596 0.266
+2024 sal_range         0.039204753 1.2448269 0.095
+2024 chl_summer_mean  -0.005150975 0.9692525 0.390
+                                                               comparison
+Fidalgo Bay 2018 vs 2024 (same site) Fidalgo Bay 2018 vs 2024 (same site)
+between sites, both 2018                         between sites, both 2018
+between sites, both 2024                         between sites, both 2024
+between sites, different years             between sites, different years
+                                     n_pairs fst_weighted_mean fst_weighted_min
+Fidalgo Bay 2018 vs 2024 (same site)       1        0.05502600         0.055026
+between sites, both 2018                  21        0.05835933         0.036987
+between sites, both 2024                  21        0.07742262         0.034294
+between sites, different years            48        0.06893512         0.034801
+                                     fst_weighted_median fst_weighted_max
+Fidalgo Bay 2018 vs 2024 (same site)            0.055026         0.055026
+between sites, both 2018                        0.055026         0.080510
+between sites, both 2024                        0.062227         0.142829
+between sites, different years                  0.062399         0.139203
+                                     fraction_of_between_site_pairs_below
+Fidalgo Bay 2018 vs 2024 (same site)                            0.3888889
+between sites, both 2018                                        0.4333333
+between sites, both 2024                                        0.7444444
+between sites, different years                                  0.5888889
+end 2026-10-03T19:14:25Z

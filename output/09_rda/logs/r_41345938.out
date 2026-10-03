@@ -1,18 +1,19 @@
-start 2026-10-03T12:53:37Z host n3346 chunks: figures metadata
+start 2026-10-03T19:17:48Z host n3258 chunks: figures metadata
 null device 
           1 
 null device 
           1 
 {
   "script": "09_rda.Rmd",
-  "date": "2026-10-03T12:53:48Z",
-  "runtime_seconds": 502.5,
+  "date": "2026-10-03T19:17:58Z",
+  "runtime_seconds": 585.4,
   "parameters": {
     "predictors": ["temp_summer_mean", "sal_range", "chl_summer_mean"],
     "geography": "dbMEM 1-2 (step 08)",
     "structure": "population means of PCAngsd PC1 and PC2 (step 06)",
     "permutations": 999,
     "seed": 42,
+    "collection_year": "2018 for location labels containing '18', else 2024 (inputs/collection-year.tsv); covariate y2024, within-year permutations via how(blocks = year)",
     "min_maf": 0.05,
     "allele_frequencies": "EM on genotype likelihoods per population (ANGSD Beagle, step 06)",
     "individual_dosages": "posterior mean under HWE at the all-sample frequency",
@@ -32,5 +33,4 @@ null device
       "rank": 13
     },
     "all": {
-      "n_units": 15,
-end 2026-10-03T12:53:48Z
+end 2026-10-03T19:17:58Z

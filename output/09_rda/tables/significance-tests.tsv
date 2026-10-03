@@ -1,51 +1,147 @@
-model	scope	term	df	variance	F	p
-env	global	constrained	3	1841721.89144233	1.13222280946588	0.164
-env	term (marginal)	temp_summer_mean	1	655223.489141233	1.20842183038159	0.119
-env	term (marginal)	sal_range	1	774285.019950323	1.4280057668136	0.024
-env	term (marginal)	chl_summer_mean	1	452933.055016789	0.83533969775881	0.781
-env	term (marginal)	Residual	10	5422142.10855767	NA	NA
-env	axis	RDA1	1	799593.74599942	1.47468238565241	0.135
-env	axis	RDA2	1	594343.180131414	1.20575500430486	0.398
-env	axis	RDA3	1	447784.965311494	0.991014155688976	0.506
-env	axis	Residual	10	5422142.10855767	NA	NA
-geo	global	constrained	2	1502577.56980712	1.43443252372066	0.003
-geo	term (marginal)	MEM1	1	655029.449336668	1.25064497834074	0.061
-geo	term (marginal)	MEM2	1	847548.234083077	1.61822028602069	0.013
-geo	term (marginal)	Residual	11	5761286.43019288	NA	NA
-geo	axis	RDA1	1	905543.261815344	1.72894994905423	0.003
-geo	axis	RDA2	1	597034.307991778	1.24354374369501	0.071
-geo	axis	Residual	11	5761286.43019288	NA	NA
-str	global	constrained	2	1979792.95215934	2.06069546345825	0.001
-str	term (marginal)	PC1	1	1023961.17444739	2.13160890853732	0.001
-str	term (marginal)	PC2	1	938092.794156029	1.95285427510162	0.001
-str	term (marginal)	Residual	11	5284071.04784067	NA	NA
-str	axis	RDA1	1	1079988.50115343	2.24824257757519	0.001
-str	axis	RDA2	1	899804.45100591	2.04343456291781	0.001
-str	axis	Residual	11	5284071.04784067	NA	NA
-env_geo	global	constrained	3	1446925.6753169	0.894331440214168	0.915
-env_geo	term (marginal)	temp_summer_mean	1	471737.588965289	0.874729983452854	0.877
-env_geo	term (marginal)	sal_range	1	434615.148091326	0.80589486653407	0.993
-env_geo	term (marginal)	chl_summer_mean	1	471383.27936357	0.874072996943195	0.771
-env_geo	term (marginal)	Residual	8	4314360.75487598	NA	NA
-env_geo	axis	RDA1	1	528293.598021879	0.979600229164545	0.935
-env_geo	axis	RDA2	1	485072.158093232	1.01188789507348	0.935
-env_geo	axis	RDA3	1	433559.919201785	1.00492273093247	0.935
-env_geo	axis	Residual	8	4314360.75487598	NA	NA
-env_str	global	constrained	3	1466134.62055899	1.02403285019449	0.357
-env_str	term (marginal)	temp_summer_mean	1	499833.62575835	1.04733776536814	0.254
-env_str	term (marginal)	sal_range	1	454022.218874441	0.951345791155981	0.623
-env_str	term (marginal)	chl_summer_mean	1	431417.549836874	0.903980583341535	0.722
-env_str	term (marginal)	Residual	8	3817936.42728168	NA	NA
-env_str	axis	RDA1	1	571195.125978553	1.19686670924531	0.335
-env_str	axis	RDA2	1	467970.014946465	1.10314307604039	0.45
-env_str	axis	RDA3	1	426969.479633967	1.11832527273893	0.45
-env_str	axis	Residual	8	3817936.42728168	NA	NA
-env_both	global	constrained	3	1349913.96590275	0.948912893495876	0.833
-env_both	term (marginal)	temp_summer_mean	1	426831.350176403	0.900114633438397	0.971
-env_both	term (marginal)	sal_range	1	434254.288504926	0.915768346338944	0.904
-env_both	term (marginal)	chl_summer_mean	1	455610.879838214	0.960805760698296	0.587
-env_both	term (marginal)	Residual	6	2845179.94255416	NA	NA
-env_both	axis	RDA1	1	488237.07153601	1.02960884315326	0.752
-env_both	axis	RDA2	1	438164.913679721	1.07801772038524	0.752
-env_both	axis	RDA3	1	423511.980687019	1.19081953124364	0.752
-env_both	axis	Residual	6	2845179.94255416	NA	NA
+model	permutation	scope	term	df	variance	F	p
+env	free	global	constrained	3	1841721.89144233	1.13222280946588	0.164
+env	free	term (marginal)	temp_summer_mean	1	655223.489141233	1.20842183038159	0.119
+env	free	term (marginal)	sal_range	1	774285.019950323	1.4280057668136	0.024
+env	free	term (marginal)	chl_summer_mean	1	452933.055016789	0.83533969775881	0.781
+env	free	term (marginal)	Residual	10	5422142.10855767	NA	NA
+env	free	axis	RDA1	1	799593.74599942	1.47468238565241	0.135
+env	free	axis	RDA2	1	594343.180131414	1.20575500430486	0.398
+env	free	axis	RDA3	1	447784.965311494	0.991014155688976	0.506
+env	free	axis	Residual	10	5422142.10855767	NA	NA
+geo	free	global	constrained	2	1502577.56980712	1.43443252372066	0.003
+geo	free	term (marginal)	MEM1	1	655029.449336668	1.25064497834074	0.061
+geo	free	term (marginal)	MEM2	1	847548.234083077	1.61822028602069	0.013
+geo	free	term (marginal)	Residual	11	5761286.43019288	NA	NA
+geo	free	axis	RDA1	1	905543.261815344	1.72894994905423	0.003
+geo	free	axis	RDA2	1	597034.307991778	1.24354374369501	0.071
+geo	free	axis	Residual	11	5761286.43019288	NA	NA
+str	free	global	constrained	2	1979792.95215934	2.06069546345825	0.001
+str	free	term (marginal)	PC1	1	1023961.17444739	2.13160890853732	0.001
+str	free	term (marginal)	PC2	1	938092.794156029	1.95285427510162	0.001
+str	free	term (marginal)	Residual	11	5284071.04784067	NA	NA
+str	free	axis	RDA1	1	1079988.50115343	2.24824257757519	0.001
+str	free	axis	RDA2	1	899804.45100591	2.04343456291781	0.001
+str	free	axis	Residual	11	5284071.04784067	NA	NA
+year	free	global	constrained	1	596107.546917564	1.07281821304434	0.191
+env_geo	free	global	constrained	3	1446925.6753169	0.894331440214168	0.921
+env_geo	free	term (marginal)	temp_summer_mean	1	471737.588965289	0.874729983452854	0.864
+env_geo	free	term (marginal)	sal_range	1	434615.148091326	0.80589486653407	0.988
+env_geo	free	term (marginal)	chl_summer_mean	1	471383.27936357	0.874072996943195	0.805
+env_geo	free	term (marginal)	Residual	8	4314360.75487598	NA	NA
+env_geo	free	axis	RDA1	1	528293.598021879	0.979600229164545	0.934
+env_geo	free	axis	RDA2	1	485072.158093232	1.01188789507348	0.934
+env_geo	free	axis	RDA3	1	433559.919201785	1.00492273093247	0.934
+env_geo	free	axis	Residual	8	4314360.75487598	NA	NA
+env_str	free	global	constrained	3	1466134.62055899	1.02403285019449	0.368
+env_str	free	term (marginal)	temp_summer_mean	1	499833.62575835	1.04733776536814	0.237
+env_str	free	term (marginal)	sal_range	1	454022.218874441	0.951345791155981	0.596
+env_str	free	term (marginal)	chl_summer_mean	1	431417.549836874	0.903980583341535	0.71
+env_str	free	term (marginal)	Residual	8	3817936.42728168	NA	NA
+env_str	free	axis	RDA1	1	571195.125978553	1.19686670924531	0.332
+env_str	free	axis	RDA2	1	467970.014946465	1.10314307604039	0.484
+env_str	free	axis	RDA3	1	426969.479633967	1.11832527273893	0.484
+env_str	free	axis	Residual	8	3817936.42728168	NA	NA
+env_both	free	global	constrained	3	1349913.96590275	0.948912893495876	0.83
+env_both	free	term (marginal)	temp_summer_mean	1	426831.350176403	0.900114633438397	0.954
+env_both	free	term (marginal)	sal_range	1	434254.288504926	0.915768346338944	0.879
+env_both	free	term (marginal)	chl_summer_mean	1	455610.879838214	0.960805760698296	0.567
+env_both	free	term (marginal)	Residual	6	2845179.94255416	NA	NA
+env_both	free	axis	RDA1	1	488237.07153601	1.02960884315326	0.774
+env_both	free	axis	RDA2	1	438164.913679721	1.07801772038524	0.774
+env_both	free	axis	RDA3	1	423511.980687019	1.19081953124364	0.774
+env_both	free	axis	Residual	6	2845179.94255416	NA	NA
+env_year	free	global	constrained	3	1884234.33825401	1.18170312148014	0.076
+env_year	free	term (marginal)	temp_summer_mean	1	683468.694213401	1.28591822098041	0.054
+env_year	free	term (marginal)	sal_range	1	795212.176907745	1.4961589850257	0.012
+env_year	free	term (marginal)	chl_summer_mean	1	528704.520960074	0.994735798103723	0.383
+env_year	free	term (marginal)	Residual	9	4783522.11482843	NA	NA
+env_year	free	axis	RDA1	1	811960.149622319	1.52766960644918	0.098
+env_year	free	axis	RDA2	1	565286.900350638	1.1817378215903	0.406
+env_year	free	axis	RDA3	1	506987.288281057	1.16584810046219	0.406
+env_year	free	axis	Residual	9	4783522.11482843	NA	NA
+env_geo_year	free	global	constrained	3	1457725.0797819	0.929586859909479	0.84
+env_geo_year	free	term (marginal)	temp_summer_mean	1	483113.542277726	0.924240119706707	0.741
+env_geo_year	free	term (marginal)	sal_range	1	439711.134251978	0.84120736802653	0.978
+env_geo_year	free	term (marginal)	chl_summer_mean	1	469242.928463706	0.897704374690257	0.788
+env_geo_year	free	term (marginal)	Residual	7	3659000.21416214	NA	NA
+env_geo_year	free	axis	RDA1	1	540038.638273877	1.03314300263925	0.825
+env_geo_year	free	axis	RDA2	1	480771.481186944	1.05115376451987	0.825
+env_geo_year	free	axis	RDA3	1	436914.960321077	1.07467461402981	0.825
+env_geo_year	free	axis	Residual	7	3659000.21416214	NA	NA
+env_all	free	global	constrained	3	1355303.51908717	0.959581512233821	0.812
+env_all	free	term (marginal)	temp_summer_mean	1	432818.881429537	0.919332808296484	0.929
+env_all	free	term (marginal)	sal_range	1	434986.748681492	0.923937486082654	0.904
+env_all	free	term (marginal)	chl_summer_mean	1	455590.355698893	0.967700761468847	0.641
+env_all	free	term (marginal)	Residual	5	2353983.65816807	NA	NA
+env_all	free	axis	RDA1	1	486815.595981289	1.03402501179669	0.816
+env_all	free	axis	RDA2	1	439051.369426341	1.11908517606623	0.816
+env_all	free	axis	RDA3	1	429436.553679543	1.27700796278942	0.816
+env_all	free	axis	Residual	5	2353983.65816807	NA	NA
+year_env_geo	free	global	constrained	1	655360.540713845	1.25376428436405	0.071
+year_env_geo	free	term (marginal)	y2024	1	655360.540713844	1.25376428436405	0.104
+year_env_geo	free	term (marginal)	Residual	7	3659000.21416214	NA	NA
+year_env_geo	free	axis	RDA1	1	655360.540713845	1.25376428436405	0.082
+year_env_geo	free	axis	Residual	7	3659000.21416214	NA	NA
+env	within year	global	constrained	3	1841721.89144233	1.13222280946588	0.17
+env	within year	term (marginal)	temp_summer_mean	1	655223.489141233	1.20842183038159	0.049
+env	within year	term (marginal)	sal_range	1	774285.019950323	1.4280057668136	0.021
+env	within year	term (marginal)	chl_summer_mean	1	452933.055016789	0.83533969775881	0.782
+env	within year	term (marginal)	Residual	10	5422142.10855767	NA	NA
+env	within year	axis	RDA1	1	799593.74599942	1.47468238565241	0.214
+env	within year	axis	RDA2	1	594343.180131414	1.20575500430486	0.313
+env	within year	axis	RDA3	1	447784.965311494	0.991014155688976	0.529
+env	within year	axis	Residual	10	5422142.10855767	NA	NA
+env_geo	within year	global	constrained	3	1446925.6753169	0.894331440214168	0.946
+env_geo	within year	term (marginal)	temp_summer_mean	1	471737.588965289	0.874729983452854	0.856
+env_geo	within year	term (marginal)	sal_range	1	434615.148091326	0.80589486653407	0.995
+env_geo	within year	term (marginal)	chl_summer_mean	1	471383.27936357	0.874072996943195	0.874
+env_geo	within year	term (marginal)	Residual	8	4314360.75487598	NA	NA
+env_geo	within year	axis	RDA1	1	528293.598021879	0.979600229164545	0.962
+env_geo	within year	axis	RDA2	1	485072.158093232	1.01188789507348	0.962
+env_geo	within year	axis	RDA3	1	433559.919201785	1.00492273093247	0.962
+env_geo	within year	axis	Residual	8	4314360.75487598	NA	NA
+env_str	within year	global	constrained	3	1466134.62055899	1.02403285019449	0.316
+env_str	within year	term (marginal)	temp_summer_mean	1	499833.62575835	1.04733776536814	0.246
+env_str	within year	term (marginal)	sal_range	1	454022.218874441	0.951345791155981	0.561
+env_str	within year	term (marginal)	chl_summer_mean	1	431417.549836874	0.903980583341535	0.672
+env_str	within year	term (marginal)	Residual	8	3817936.42728168	NA	NA
+env_str	within year	axis	RDA1	1	571195.125978553	1.19686670924531	0.335
+env_str	within year	axis	RDA2	1	467970.014946465	1.10314307604039	0.421
+env_str	within year	axis	RDA3	1	426969.479633967	1.11832527273893	0.421
+env_str	within year	axis	Residual	8	3817936.42728168	NA	NA
+env_both	within year	global	constrained	3	1349913.96590275	0.948912893495876	0.809
+env_both	within year	term (marginal)	temp_summer_mean	1	426831.350176403	0.900114633438397	0.953
+env_both	within year	term (marginal)	sal_range	1	434254.288504926	0.915768346338944	0.871
+env_both	within year	term (marginal)	chl_summer_mean	1	455610.879838214	0.960805760698296	0.57
+env_both	within year	term (marginal)	Residual	6	2845179.94255416	NA	NA
+env_both	within year	axis	RDA1	1	488237.07153601	1.02960884315326	0.754
+env_both	within year	axis	RDA2	1	438164.913679721	1.07801772038524	0.754
+env_both	within year	axis	RDA3	1	423511.980687019	1.19081953124364	0.754
+env_both	within year	axis	Residual	6	2845179.94255416	NA	NA
+env_year	within year	global	constrained	3	1884234.33825401	1.18170312148014	0.119
+env_year	within year	term (marginal)	temp_summer_mean	1	683468.694213401	1.28591822098041	0.034
+env_year	within year	term (marginal)	sal_range	1	795212.176907745	1.4961589850257	0.017
+env_year	within year	term (marginal)	chl_summer_mean	1	528704.520960074	0.994735798103723	0.415
+env_year	within year	term (marginal)	Residual	9	4783522.11482843	NA	NA
+env_year	within year	axis	RDA1	1	811960.149622319	1.52766960644918	0.191
+env_year	within year	axis	RDA2	1	565286.900350638	1.1817378215903	0.392
+env_year	within year	axis	RDA3	1	506987.288281057	1.16584810046219	0.392
+env_year	within year	axis	Residual	9	4783522.11482843	NA	NA
+env_geo_year	within year	global	constrained	3	1457725.0797819	0.929586859909479	0.811
+env_geo_year	within year	term (marginal)	temp_summer_mean	1	483113.542277726	0.924240119706707	0.734
+env_geo_year	within year	term (marginal)	sal_range	1	439711.134251978	0.84120736802653	0.967
+env_geo_year	within year	term (marginal)	chl_summer_mean	1	469242.928463706	0.897704374690257	0.714
+env_geo_year	within year	term (marginal)	Residual	7	3659000.21416214	NA	NA
+env_geo_year	within year	axis	RDA1	1	540038.638273877	1.03314300263925	0.795
+env_geo_year	within year	axis	RDA2	1	480771.481186944	1.05115376451987	0.795
+env_geo_year	within year	axis	RDA3	1	436914.960321077	1.07467461402981	0.795
+env_geo_year	within year	axis	Residual	7	3659000.21416214	NA	NA
+env_all	within year	global	constrained	3	1355303.51908717	0.959581512233821	0.838
+env_all	within year	term (marginal)	temp_summer_mean	1	432818.881429537	0.919332808296484	0.934
+env_all	within year	term (marginal)	sal_range	1	434986.748681492	0.923937486082654	0.927
+env_all	within year	term (marginal)	chl_summer_mean	1	455590.355698893	0.967700761468847	0.64
+env_all	within year	term (marginal)	Residual	5	2353983.65816807	NA	NA
+env_all	within year	axis	RDA1	1	486815.595981289	1.03402501179669	0.776
+env_all	within year	axis	RDA2	1	439051.369426341	1.11908517606623	0.776
+env_all	within year	axis	RDA3	1	429436.553679543	1.27700796278942	0.776
+env_all	within year	axis	Residual	5	2353983.65816807	NA	NA

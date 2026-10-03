@@ -1,13 +1,14 @@
 {
   "script": "09_rda.Rmd",
-  "date": "2026-10-03T12:53:48Z",
-  "runtime_seconds": 502.5,
+  "date": "2026-10-03T19:17:58Z",
+  "runtime_seconds": 585.4,
   "parameters": {
     "predictors": ["temp_summer_mean", "sal_range", "chl_summer_mean"],
     "geography": "dbMEM 1-2 (step 08)",
     "structure": "population means of PCAngsd PC1 and PC2 (step 06)",
     "permutations": 999,
     "seed": 42,
+    "collection_year": "2018 for location labels containing '18', else 2024 (inputs/collection-year.tsv); covariate y2024, within-year permutations via how(blocks = year)",
     "min_maf": 0.05,
     "allele_frequencies": "EM on genotype likelihoods per population (ANGSD Beagle, step 06)",
     "individual_dosages": "posterior mean under HWE at the all-sample frequency",
@@ -30,6 +31,16 @@
       "n_units": 15,
       "n_snp": 7373591,
       "rank": 14
+    },
+    "env_2018": {
+      "n_units": 7,
+      "n_snp": 6874146,
+      "rank": 6
+    },
+    "env_2024": {
+      "n_units": 7,
+      "n_snp": 6943818,
+      "rank": 6
     },
     "env_merge_fidalgo": {
       "n_units": 13,
@@ -65,8 +76,8 @@
     }
   },
   "outputs": {
-    "inputs": ["output/09_rda/inputs/all-pcoa.tsv", "output/09_rda/inputs/env-pcoa.tsv", "output/09_rda/inputs/env_merge_fidalgo-pcoa.tsv", "output/09_rda/inputs/individual-pcoa.tsv", "output/09_rda/inputs/population-sets.tsv", "output/09_rda/inputs/reduce-metadata.json"],
-    "tables": ["output/09_rda/tables/axis-unit-scores.tsv", "output/09_rda/tables/forward-selection.tsv", "output/09_rda/tables/individual-level-tests.tsv", "output/09_rda/tables/individual-permutation-null.tsv", "output/09_rda/tables/manhattan-thinned.tsv.gz", "output/09_rda/tables/outlier-summary.tsv", "output/09_rda/tables/outlier-top-loci.tsv", "output/09_rda/tables/rda-biplot-scores.tsv", "output/09_rda/tables/rda-eigenvalues.tsv", "output/09_rda/tables/rda-unit-scores.tsv", "output/09_rda/tables/sensitivity-refits.tsv", "output/09_rda/tables/significance-tests.tsv", "output/09_rda/tables/snps-per-window.tsv", "output/09_rda/tables/temperature-only-models.tsv", "output/09_rda/tables/variance-partition.tsv", "output/09_rda/tables/vif.tsv"],
+    "inputs": ["output/09_rda/inputs/all-pcoa.tsv", "output/09_rda/inputs/collection-year.tsv", "output/09_rda/inputs/env-pcoa.tsv", "output/09_rda/inputs/env_2018-pcoa.tsv", "output/09_rda/inputs/env_2024-pcoa.tsv", "output/09_rda/inputs/env_merge_fidalgo-pcoa.tsv", "output/09_rda/inputs/individual-pcoa.tsv", "output/09_rda/inputs/population-sets.tsv", "output/09_rda/inputs/reduce-metadata.json"],
+    "tables": ["output/09_rda/tables/axis-unit-scores.tsv", "output/09_rda/tables/forward-selection.tsv", "output/09_rda/tables/individual-level-tests.tsv", "output/09_rda/tables/individual-permutation-null.tsv", "output/09_rda/tables/manhattan-thinned.tsv.gz", "output/09_rda/tables/outlier-summary.tsv", "output/09_rda/tables/outlier-top-loci.tsv", "output/09_rda/tables/per-year-models.tsv", "output/09_rda/tables/rda-biplot-scores.tsv", "output/09_rda/tables/rda-eigenvalues.tsv", "output/09_rda/tables/rda-unit-scores.tsv", "output/09_rda/tables/sensitivity-refits.tsv", "output/09_rda/tables/significance-tests.tsv", "output/09_rda/tables/snps-per-window.tsv", "output/09_rda/tables/temperature-only-models.tsv", "output/09_rda/tables/temporal-fidalgo.tsv", "output/09_rda/tables/variance-partition.tsv", "output/09_rda/tables/vif.tsv"],
     "figures": ["output/09_rda/figures/outlier-manhattan.png", "output/09_rda/figures/rda-summary.png"]
   }
 }
